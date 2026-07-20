@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Unmasking Screener &mdash; Map where you mask</title>
-<meta name="description" content="A 28-item self-reflection across seven domains of masking. Produces a personal terrain map, not a diagnosis." />
+<title>Unmasking Map &mdash; Track where you mask</title>
+<meta name="description" content="A progress tracker for autism unmasking: a 28-item terrain map plus daily quick logs, trends, and history." />
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json" />
@@ -43,7 +43,7 @@
   .serif { font-family: 'Fraunces', serif; }
   .mono { font-family: 'IBM Plex Mono', monospace; }
 
-  .wrap { max-width: 42rem; margin: 0 auto; padding: 3.5rem 1.5rem; }
+  .wrap { max-width: 42rem; margin: 0 auto; padding: 3.5rem 1.5rem 6.5rem 1.5rem; }
 
   .eyebrow {
     font-size: 0.75rem;
@@ -85,6 +85,16 @@
   }
   .btn-primary:hover { opacity: 0.85; }
   .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--paper-raised);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  .btn-secondary:hover { border-color: var(--moss); }
   .btn-ghost {
     background: transparent;
     color: var(--ink-soft);
@@ -92,8 +102,16 @@
     padding: 0.75rem 0.25rem;
   }
   .btn-ghost:hover { color: var(--ink); }
+  .btn-danger {
+    background: transparent;
+    color: var(--rust);
+    border: 1px solid var(--rust);
+    border-radius: 999px;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.8125rem;
+  }
 
-  /* progress */
+  /* progress (assessment) */
   .progress-row {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 0.5rem;
@@ -132,11 +150,11 @@
     border: 1px solid var(--line);
     border-radius: 1rem;
     padding: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
   .legend-row { display: flex; gap: 1rem; margin-bottom: 2rem; font-size: 11px; color: var(--ink-soft); flex-wrap: wrap; }
   .legend-item { display: flex; align-items: center; gap: 0.375rem; }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
   .score-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
   .score-num { font-family: 'IBM Plex Mono', monospace; font-size: 1.125rem; font-weight: 500; width: 3rem; flex-shrink: 0; padding-top: 0.125rem; }
@@ -147,7 +165,7 @@
 
   .footnote { font-size: 0.875rem; color: var(--ink-soft); line-height: 1.6; margin: 0 0 2rem 0; }
 
-  .action-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .action-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
   .install-banner {
     display: none;
@@ -168,10 +186,160 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
+  /* ---------- dashboard / home ---------- */
+  .stat-row { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
+  .stat-card {
+    flex: 1;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 0.875rem;
+    padding: 1rem;
+  }
+  .stat-num { font-family: 'Fraunces', serif; font-size: 1.75rem; font-weight: 600; color: var(--moss); line-height: 1; }
+  .stat-label { font-size: 0.75rem; color: var(--ink-soft); margin-top: 0.375rem; }
+
+  .home-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .home-latest { display: flex; gap: 1rem; align-items: center; }
+  .home-latest svg { flex-shrink: 0; }
+  .home-latest-info { flex: 1; min-width: 0; }
+  .home-latest-info h3 { font-family: 'Fraunces', serif; font-size: 1.125rem; margin: 0 0 0.25rem 0; }
+  .home-latest-info p { margin: 0; font-size: 0.8125rem; color: var(--ink-soft); }
+  .chip {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid;
+    margin: 0.375rem 0.375rem 0 0;
+  }
+
+  .section-heading { font-family: 'Fraunces', serif; font-size: 1.125rem; font-weight: 500; margin: 0 0 0.75rem 0; }
+
+  .log-row { display: flex; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--line); text-align: left; }
+  .log-row:last-child { border-bottom: none; }
+  .log-row-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 0.4rem; flex-shrink: 0; }
+  .log-row-body { flex: 1; min-width: 0; }
+  .log-row-head { display: flex; justify-content: space-between; font-size: 0.875rem; }
+  .log-row-tags { margin: 0.2rem 0 0 0; font-size: 0.75rem; color: var(--ink-soft); }
+  .log-row-note { margin: 0.2rem 0 0 0; font-size: 0.8125rem; color: var(--ink-soft); font-style: italic; }
+
+  /* ---------- quick log ---------- */
+  .tag-chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .tag-chip {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8125rem;
+  }
+  textarea.note-field {
+    width: 100%;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.875rem;
+    color: var(--ink);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    resize: vertical;
+    min-height: 4.5rem;
+    margin-bottom: 1.5rem;
+  }
+  textarea.note-field:focus { outline: none; border-color: var(--moss); }
+
+  /* ---------- trends ---------- */
+  .legend-chip {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0 0.4rem 0.4rem 0;
+  }
+  .legend-chip.off { opacity: 0.35; }
+
+  /* ---------- history ---------- */
+  .history-row {
+    display: block;
+    width: 100%;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 0.875rem;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.75rem;
+    text-align: left;
+    color: inherit;
+  }
+  button.history-row:hover { border-color: var(--moss); }
+  .history-row-icon { display: none; }
+  .history-row .log-row { border-bottom: none; padding: 0.5rem 0; }
+  button.history-row .log-row-head span:first-child::before { content: "\25C8  "; color: var(--moss); }
+
+  /* ---------- settings ---------- */
+  .settings-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 0; border-bottom: 1px solid var(--line);
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row-text h3 { font-family: 'Fraunces', serif; font-size: 1rem; margin: 0 0 0.2rem 0; }
+  .settings-row-text p { margin: 0; font-size: 0.8125rem; color: var(--ink-soft); }
+  .file-label {
+    display: inline-block;
+    background: var(--paper-raised);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.8125rem;
+    cursor: pointer;
+  }
+  .file-label:hover { border-color: var(--moss); }
+
+  /* ---------- bottom nav ---------- */
+  #bottom-nav {
+    display: none;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--paper-raised);
+    border-top: 1px solid var(--line);
+    padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+    z-index: 20;
+  }
+  #bottom-nav.show { display: flex; }
+  .nav-inner { display: flex; max-width: 42rem; margin: 0 auto; width: 100%; }
+  .nav-btn {
+    flex: 1;
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 0.6875rem;
+    letter-spacing: 0.03em;
+    padding: 0.5rem 0.25rem;
+    border-radius: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .nav-btn .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: transparent; }
+  .nav-btn.active { color: var(--ink); font-weight: 500; }
+  .nav-btn.active .nav-dot { background: var(--moss); }
+
   @media (max-width: 480px) {
     h1.title { font-size: 1.75rem; }
     .scale-btn { font-size: 10px; }
-    .wrap { padding: 2rem 1.25rem; }
+    .wrap { padding: 2rem 1.25rem 6.5rem 1.25rem; }
+    .stat-row { flex-wrap: wrap; }
   }
 </style>
 </head>
@@ -183,17 +351,78 @@
     <button id="install-btn">Install</button>
   </div>
 
-  <!-- INTRO -->
+  <!-- INTRO (first launch only) -->
   <div id="screen-intro" class="screen active">
     <p class="eyebrow">Field survey &middot; not a diagnosis</p>
     <h1 class="title">Map where you mask,<br />not what you are.</h1>
-    <p class="lede">This is a 28-item self-reflection across seven domains of masking &mdash; social scripting, sensory suppression, stimming, eye contact, interests, emotional labor, and executive fatigue. It produces a personal terrain map, not a label or a diagnosis.</p>
-    <p class="lede">Answer for how you actually operate day to day, not how you wish you operated. There's no wrong shape for this map &mdash; it only exists to tell you where to start.</p>
+    <p class="lede">This is a progress tracker for unmasking, built around a 28-item self-reflection across seven domains &mdash; social scripting, sensory suppression, stimming, eye contact, interests, emotional labor, and executive fatigue.</p>
+    <p class="lede">Take the full map every few weeks to see your terrain shift, and use quick daily logs in between &mdash; the way you'd track weight or habits, but for how much you're masking. Answer for how you actually operate, not how you wish you operated.</p>
     <div class="contour-rule"></div>
-    <button class="btn-primary" id="begin-btn">Begin survey</button>
+    <button class="btn-primary" id="begin-btn">Take the first map</button>
   </div>
 
-  <!-- QUIZ -->
+  <!-- HOME / DASHBOARD -->
+  <div id="screen-home" class="screen">
+    <p class="eyebrow">Your dashboard</p>
+    <h1 class="title">Unmasking Map</h1>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-num"><span id="streak-count">0</span></div>
+        <div class="stat-label" id="streak-word">day streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num mono" id="stat-log-count">0</div>
+        <div class="stat-label">quick logs total</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="home-quicklog-btn" style="width:100%; padding:0.9rem; margin-bottom:1.25rem;">Log today in ten seconds</button>
+
+    <div id="home-latest-wrap" class="home-card">
+      <div class="home-latest">
+        <svg id="home-mini-radar" width="90" height="90" viewBox="0 0 140 140"></svg>
+        <div class="home-latest-info">
+          <h3>Latest terrain map</h3>
+          <p id="home-latest-date"></p>
+          <div id="home-top-domains"></div>
+        </div>
+      </div>
+      <p class="footnote" id="home-recheck-hint" style="margin:0.75rem 0 0 0;"></p>
+      <button class="btn-secondary" id="home-retake-btn" style="margin-top:0.75rem;">Retake full map</button>
+    </div>
+
+    <div id="home-empty-wrap" class="home-card">
+      <h3 class="section-heading" style="margin-bottom:0.5rem;">No terrain map yet</h3>
+      <p class="footnote" style="margin-bottom:1rem;">The full 28-item map gives you a starting shape. Quick logs alone can't show a radar view.</p>
+      <button class="btn-primary" id="home-start-btn">Take the full map</button>
+    </div>
+
+    <h2 class="section-heading">Recent logs</h2>
+    <div id="home-recent-logs" class="home-card" style="padding: 0.5rem 1.25rem;"></div>
+  </div>
+
+  <!-- QUICK LOG -->
+  <div id="screen-quicklog" class="screen">
+    <p class="eyebrow">Quick log &middot; today</p>
+    <h1 class="title">How much are you masking today?</h1>
+    <p class="lede">Overall, across the day so far &mdash; not any one domain in particular.</p>
+
+    <div class="scale-grid" id="quicklog-scale" style="margin-bottom: 1.5rem;"></div>
+
+    <h2 class="section-heading">Where did it show up? (optional)</h2>
+    <div class="tag-chip-row" id="quicklog-domains"></div>
+
+    <h2 class="section-heading">Note (optional)</h2>
+    <textarea class="note-field" id="quicklog-note" placeholder="Anything specific about today..."></textarea>
+
+    <div class="action-row">
+      <button class="btn-primary" id="quicklog-save" disabled>Save today's log</button>
+      <button class="btn-ghost" id="quicklog-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- QUIZ (full assessment) -->
   <div id="screen-quiz" class="screen">
     <div class="progress-row">
       <p id="domain-counter">Domain 1 of 7</p>
@@ -214,12 +443,13 @@
 
   <!-- RESULTS -->
   <div id="screen-results" class="screen">
-    <p class="eyebrow">Your terrain map</p>
-    <h2 class="domain-label">Where your masking sits today</h2>
+    <p class="eyebrow" id="results-date">Your terrain map</p>
+    <h2 class="domain-label">Where your masking sits</h2>
 
     <div class="chart-card">
       <svg id="radar-chart" width="100%" viewBox="0 0 400 340" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
+    <p class="footnote" id="results-compare-note" style="margin-bottom:1rem;"></p>
 
     <div class="legend-row">
       <div class="legend-item"><span class="legend-dot" style="background:#5B7065"></span>Low</div>
@@ -233,13 +463,82 @@
 
     <div class="contour-rule"></div>
 
-    <p class="footnote">This map reflects self-reported patterns, not a clinical assessment. It's meant to guide a self-paced, individual unmasking plan &mdash; your two or three highest-scoring domains are typically the strongest starting points for that plan.</p>
+    <p class="footnote">This map reflects self-reported patterns, not a clinical assessment. Your two or three highest-scoring domains are typically the strongest starting points for an unmasking plan.</p>
 
-    <div class="action-row">
-      <button class="btn-primary" id="restart-btn">Retake survey</button>
+    <div class="action-row" id="results-retake-row">
+      <button class="btn-primary" id="restart-btn">Retake full map</button>
     </div>
   </div>
 
+  <!-- TRENDS -->
+  <div id="screen-trends" class="screen">
+    <p class="eyebrow">Over time</p>
+    <h1 class="title">Trends</h1>
+
+    <h2 class="section-heading">Domain scores across full maps</h2>
+    <div class="chart-card">
+      <svg id="trend-chart" width="100%" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div id="trend-legend" style="margin-bottom:0.5rem;"></div>
+    <p class="footnote" id="trend-assessment-count"></p>
+
+    <h2 class="section-heading">Daily quick logs (last 14)</h2>
+    <div class="chart-card">
+      <svg id="log-bar-chart" width="100%" viewBox="0 0 400 160" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <p class="footnote">Taller, redder bars mean more masking reported that day.</p>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="screen-history" class="screen">
+    <p class="eyebrow">Everything you've logged</p>
+    <h1 class="title">History</h1>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="screen-settings" class="screen">
+    <p class="eyebrow">Your data</p>
+    <h1 class="title">Settings</h1>
+
+    <div class="home-card">
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <h3>Export data</h3>
+          <p>Save everything as a JSON file you control.</p>
+        </div>
+        <button class="btn-secondary" id="export-btn">Export</button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <h3>Import data</h3>
+          <p>Restore from a previously exported file.</p>
+        </div>
+        <label class="file-label" for="import-input">Import</label>
+        <input type="file" id="import-input" accept="application/json" style="display:none;" />
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <h3>Reset all data</h3>
+          <p>Deletes every map and log from this device.</p>
+        </div>
+        <button class="btn-danger" id="reset-btn">Reset</button>
+      </div>
+    </div>
+
+    <p class="footnote">Everything is stored only on this device, in your browser's local storage. Nothing is sent anywhere. Export regularly if you'd like a backup.</p>
+  </div>
+
+</div>
+
+<div id="bottom-nav">
+  <div class="nav-inner">
+    <button class="nav-btn" data-nav="home"><span class="nav-dot"></span>Home</button>
+    <button class="nav-btn" data-nav="quicklog"><span class="nav-dot"></span>Log</button>
+    <button class="nav-btn" data-nav="trends"><span class="nav-dot"></span>Trends</button>
+    <button class="nav-btn" data-nav="history"><span class="nav-dot"></span>History</button>
+    <button class="nav-btn" data-nav="settings"><span class="nav-dot"></span>Settings</button>
+  </div>
 </div>
 
 <script src="app.js"></script>
