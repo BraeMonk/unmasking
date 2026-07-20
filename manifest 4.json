@@ -1,0 +1,25 @@
+{
+  "name": "Unmasking Screener",
+  "short_name": "Unmasking Map",
+  "description": "A 28-item self-reflection across seven domains of masking. Produces a personal terrain map, not a diagnosis.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EDEFE7",
+  "theme_color": "#EDEFE7",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
