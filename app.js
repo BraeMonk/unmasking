@@ -144,6 +144,141 @@ function bandFor(score) {
   return "high";
 }
 
+/* ---------------------------------------------------------
+   COMMUNICATION SCRIPTS (editable templates, not prescriptive)
+--------------------------------------------------------- */
+const SCRIPTS = [
+  {
+    id: "accommodation",
+    title: "Asking for a sensory accommodation",
+    body: "Would it be okay if [specific change] for [situation]? It helps me focus, and it takes very little to arrange.",
+  },
+  {
+    id: "explain-shutdown",
+    title: "Explaining a shutdown, after the fact",
+    body: "Earlier I went quiet, or I stepped away. That wasn't about you, it was my system hitting capacity. I just need some recovery time, then I'm okay to talk.",
+  },
+  {
+    id: "decline-invite",
+    title: "Declining an overwhelming invite",
+    body: "I want to be there for this, but if I come I might need to leave early or step outside sometimes. Is that alright, or would you rather I sit this one out?",
+  },
+  {
+    id: "ask-direct",
+    title: "Asking someone to be more direct",
+    body: "I do better with plain, direct language. If something's wrong or you need something specific, just tell me straight. I won't take it badly.",
+  },
+  {
+    id: "introduce-needs",
+    title: "Introducing your needs to someone new",
+    body: "I process things a little differently. I might need things spelled out clearly, and I might need a break if a space gets too loud or bright. Letting me know that's fine helps a lot.",
+  },
+];
+
+/* Body / interoception check-ins for the quick log */
+const BODY_CHECKS = [
+  { id: "hungry", label: "Hungry" },
+  { id: "thirsty", label: "Thirsty" },
+  { id: "bathroom", label: "Need bathroom" },
+  { id: "pain", label: "Pain / discomfort" },
+  { id: "temp", label: "Too hot / cold" },
+];
+
+/* ---------------------------------------------------------
+   SCAFFOLDING PLANS
+   Existing, published, named frameworks only \u2014 nothing invented here.
+   Each plan's steps are drawn directly from how its originator
+   describes the method, with attribution. Not a substitute for
+   working with the clinician or program that developed it.
+--------------------------------------------------------- */
+const PLANS = [
+  {
+    id: "energy-accounting",
+    title: "Energy Accounting",
+    source: "Dr. Tony Attwood & Maja Toudal, clinical psychologist / autism practice",
+    note: "A published stress-management method built specifically for autistic burnout and energy management (Attwood & Toudal, \u201cEnergy Accounting,\u201d Jessica Kingsley Publishers).",
+    steps: [
+      "List your \u201Cwithdrawals\u201D \u2014 everything that drains your energy: people, places, tasks, sensory input.",
+      "List your \u201Cdeposits\u201D \u2014 everything that replenishes it, however small.",
+      "Give each one a rough number (say 10 for a little, 100 for a lot) to weight it.",
+      "Track a day or a week and total up withdrawals against deposits.",
+      "When withdrawals are running high, schedule a deposit before the account goes negative, not after.",
+    ],
+  },
+  {
+    id: "zones-of-regulation",
+    title: "Zones of Regulation",
+    source: "Leah Kuypers, MA Ed., OTR/L, occupational therapist",
+    note: "A widely used, research-informed self-regulation framework built on occupational therapy, CBT, and sensory integration research.",
+    steps: [
+      "Learn the four zones: Blue (low energy, down), Green (calm, regulated), Yellow (heightened, some control), Red (extreme, out of control).",
+      "Check in through the day: which zone am I in right now?",
+      "Build your own list of tools that help you shift zones or stay regulated in each one.",
+      "Practice naming your zone in a calm moment, so it's familiar language before you're in crisis.",
+      "Let the zone \u2014 not just the trigger \u2014 decide what kind of support you reach for.",
+    ],
+  },
+  {
+    id: "low-arousal",
+    title: "Low Arousal Approach",
+    source: "Dr. Andrew McDonnell, clinical psychologist, Studio3",
+    note: "An evidence-informed approach for de-escalating crisis states, built on research into physiological arousal in autism.",
+    steps: [
+      "Identify what escalates you: demands, requests, direct eye contact, crowding, being touched without warning.",
+      "In a tense moment, reduce demands first \u2014 fewer requests, not more explanation or reasoning.",
+      "Reduce triggering stimuli where you can: less noise, less crowding, fewer people watching.",
+      "Reflect afterward, once calm, on what fed the escalation \u2014 including your own reactions, without blame.",
+      "Keep debriefing separate from the moment itself: talk it through only once things are calm.",
+    ],
+  },
+  {
+    id: "teacch",
+    title: "TEACCH Structured Teaching",
+    source: "Division TEACCH, University of North Carolina (founded by Eric Schopler)",
+    note: "A long-established, widely studied structured-teaching approach built around visual schedules and physical organization.",
+    steps: [
+      "Make time visible: a written or visual schedule for the day, not just a plan held in your head.",
+      "Make tasks visible: break a task into a clear physical sequence of steps instead of one abstract instruction.",
+      "Organize your space so each activity has a consistent place \u2014 this removes small decisions before they cost you energy.",
+      "Build in a clear, visible signal for \u201Cfinished,\u201D so transitions between tasks aren't ambiguous.",
+    ],
+  },
+  {
+    id: "social-stories",
+    title: "Social Stories",
+    source: "Carol Gray, autism educator and researcher",
+    note: "A well-established method for preparing for social or unfamiliar situations through short, factual narratives.",
+    steps: [
+      "Pick one specific situation you find hard to predict or prepare for.",
+      "Write a short, factual, first-person account of what usually happens, in order.",
+      "Describe plainly how people involved might feel or react \u2014 described, not assumed.",
+      "Include one or two concrete things you can do in that moment.",
+      "Read it before the situation, as many times as you need to.",
+    ],
+  },
+  {
+    id: "burnout-recovery",
+    title: "Autistic Burnout Recovery Steps",
+    source: "Jennifer Kemp, psychologist, drawing on Raymaker et al. (2020) autistic burnout research",
+    note: "A stepped recovery approach specifically for autistic burnout, distinct from standard depression treatment.",
+    steps: [
+      "Understand your actual challenges, needs, and values \u2014 separate from what you feel you \u201Cshould\u201D be able to do.",
+      "Identify what's actually depleting you day to day, not just the obvious stressors.",
+      "Reduce demands where you can, even temporarily \u2014 pushing to \u201Cget back to normal\u201D can backfire in autistic burnout specifically.",
+      "Rebuild slowly, toward your own values, rather than back to the exact routine that led to burnout.",
+      "Expect this to take longer than you'd like, and treat that as normal, not failure.",
+    ],
+  },
+];
+
+/* Overload type: meltdown (outward) vs shutdown (inward) are distinct states */
+const OVERLOAD_TYPES = [
+  { value: "none", label: "Neither" },
+  { value: "shutdown", label: "Shutdown" },
+  { value: "meltdown", label: "Meltdown" },
+  { value: "both", label: "Both" },
+];
+
 const bandMeta = {
   low: { label: "Low", color: "#5B7065" },
   moderate: { label: "Moderate", color: "#A8763E" },
@@ -158,14 +293,20 @@ const STORE_KEY = "unmasking-tracker-v1";
 function loadStore() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (!raw) return { assessments: [], logs: [] };
+    if (!raw) return { assessments: [], logs: [], scripts: {}, settings: { fontScale: "normal", reduceMotion: false, highContrast: false }, nextStep: { text: "", done: false }, planProgress: {} };
     const parsed = JSON.parse(raw);
     return {
       assessments: Array.isArray(parsed.assessments) ? parsed.assessments : [],
       logs: Array.isArray(parsed.logs) ? parsed.logs : [],
+      scripts: parsed.scripts && typeof parsed.scripts === "object" ? parsed.scripts : {},
+      settings: parsed.settings && typeof parsed.settings === "object"
+        ? { fontScale: "normal", reduceMotion: false, highContrast: false, ...parsed.settings }
+        : { fontScale: "normal", reduceMotion: false, highContrast: false },
+      nextStep: parsed.nextStep && typeof parsed.nextStep === "object" ? parsed.nextStep : { text: "", done: false },
+      planProgress: parsed.planProgress && typeof parsed.planProgress === "object" ? parsed.planProgress : {},
     };
   } catch (e) {
-    return { assessments: [], logs: [] };
+    return { assessments: [], logs: [], scripts: {}, settings: { fontScale: "normal", reduceMotion: false, highContrast: false }, nextStep: { text: "", done: false }, planProgress: {} };
   }
 }
 
@@ -204,8 +345,9 @@ let screen = store.assessments.length || store.logs.length ? "home" : "intro";
 let domainIndex = 0;
 let answers = {}; // in-progress assessment answers, key: `${domainId}-${itemIndex}` -> 0-4
 let viewingAssessmentId = null; // when viewing a past assessment from history
-let quickLogDraft = { overall: null, domains: [], note: "" };
+let quickLogDraft = { overall: null, domains: [], note: "", bodyChecks: [], overloadType: "none" };
 let trendHidden = new Set(); // domain ids hidden from trend chart
+let toolkitTab = "scripts"; // "scripts" | "plans"
 
 const totalItems = DOMAINS.reduce((n, d) => n + d.items.length, 0);
 
@@ -304,6 +446,35 @@ function toggleLogDomain(id) {
   render();
 }
 
+function toggleBodyCheck(id) {
+  const i = quickLogDraft.bodyChecks.indexOf(id);
+  if (i === -1) quickLogDraft.bodyChecks.push(id);
+  else quickLogDraft.bodyChecks.splice(i, 1);
+  render();
+}
+
+function setOverloadType(v) {
+  quickLogDraft.overloadType = v;
+  render();
+}
+
+/* ---------------------------------------------------------
+   ONE NEXT STEP (lightweight, single-task widget for low-capacity days)
+--------------------------------------------------------- */
+function saveNextStep() {
+  const val = document.getElementById("next-step-input").value.trim();
+  if (!val) return;
+  store.nextStep = { text: val, done: false };
+  saveStore();
+  render();
+}
+
+function completeNextStep() {
+  store.nextStep = { text: "", done: false };
+  saveStore();
+  render();
+}
+
 function setLogOverall(v) {
   quickLogDraft.overall = v;
   render();
@@ -317,10 +488,12 @@ function saveQuickLog() {
     overall: quickLogDraft.overall,
     domains: [...quickLogDraft.domains],
     note: quickLogDraft.note.trim(),
+    bodyChecks: [...quickLogDraft.bodyChecks],
+    overloadType: quickLogDraft.overloadType,
   };
   store.logs.push(entry);
   saveStore();
-  quickLogDraft = { overall: null, domains: [], note: "" };
+  quickLogDraft = { overall: null, domains: [], note: "", bodyChecks: [], overloadType: "none" };
   goScreen("home");
 }
 
@@ -361,8 +534,18 @@ function importData(file) {
     try {
       const parsed = JSON.parse(reader.result);
       if (!Array.isArray(parsed.assessments) || !Array.isArray(parsed.logs)) throw new Error("bad shape");
-      store = { assessments: parsed.assessments, logs: parsed.logs };
+      store = {
+        assessments: parsed.assessments,
+        logs: parsed.logs,
+        scripts: parsed.scripts && typeof parsed.scripts === "object" ? parsed.scripts : {},
+        settings: parsed.settings && typeof parsed.settings === "object"
+          ? { fontScale: "normal", reduceMotion: false, highContrast: false, ...parsed.settings }
+          : { fontScale: "normal", reduceMotion: false, highContrast: false },
+        nextStep: parsed.nextStep && typeof parsed.nextStep === "object" ? parsed.nextStep : { text: "", done: false },
+        planProgress: parsed.planProgress && typeof parsed.planProgress === "object" ? parsed.planProgress : {},
+      };
       saveStore();
+      applyAccessibilitySettings();
       goScreen("home");
     } catch (e) {
       alert("That file doesn't look like a valid export.");
@@ -373,7 +556,7 @@ function importData(file) {
 
 function resetAllData() {
   if (!confirm("Delete all assessments and logs from this device? This can't be undone.")) return;
-  store = { assessments: [], logs: [] };
+  store = { assessments: [], logs: [], scripts: {}, settings: store.settings, nextStep: { text: "", done: false }, planProgress: {} };
   saveStore();
   goScreen("intro");
 }
@@ -551,7 +734,7 @@ function escapeXml(s) {
 /* ---------------------------------------------------------
    RENDER: SHELL
 --------------------------------------------------------- */
-const SCREEN_IDS = ["intro", "home", "quicklog", "quiz", "results", "trends", "history", "settings"];
+const SCREEN_IDS = ["intro", "home", "quicklog", "quiz", "results", "trends", "history", "scripts", "settings"];
 
 function render() {
   SCREEN_IDS.forEach((id) => {
@@ -572,6 +755,8 @@ function render() {
   if (screen === "results") renderResults();
   if (screen === "trends") renderTrends();
   if (screen === "history") renderHistory();
+  if (screen === "scripts") renderToolkit();
+  if (screen === "settings") renderSettings();
 }
 
 /* ---------------------------------------------------------
@@ -581,6 +766,20 @@ function renderHome() {
   const streak = currentStreak();
   document.getElementById("streak-count").textContent = streak;
   document.getElementById("streak-word").textContent = streak === 1 ? "day streak" : "day streak";
+
+  const nsInput = document.getElementById("next-step-input");
+  const nsDone = document.getElementById("next-step-done");
+  const nsDisplay = document.getElementById("next-step-display");
+  const nsSetWrap = document.getElementById("next-step-set-wrap");
+  if (store.nextStep.text && !store.nextStep.done) {
+    nsSetWrap.style.display = "none";
+    nsDisplay.style.display = "";
+    nsDisplay.querySelector(".next-step-text").textContent = store.nextStep.text;
+  } else {
+    nsSetWrap.style.display = "";
+    nsDisplay.style.display = "none";
+    nsInput.value = store.nextStep.text || "";
+  }
 
   const latest = store.assessments[store.assessments.length - 1];
   const latestWrap = document.getElementById("home-latest-wrap");
@@ -620,11 +819,15 @@ function renderHome() {
 
 function logRowHtml(l) {
   const tagLabels = l.domains.map((id) => DOMAINS.find((d) => d.id === id)?.label).filter(Boolean);
+  const bodyLabels = (l.bodyChecks || []).map((id) => BODY_CHECKS.find((b) => b.id === id)?.label).filter(Boolean);
+  const overloadLabel = l.overloadType && l.overloadType !== "none" ? OVERLOAD_TYPES.find((o) => o.value === l.overloadType)?.label : null;
   return `<div class="log-row">
     <div class="log-row-dot" style="background:${l.overall >= 3 ? "#B4654A" : l.overall >= 2 ? "#A8763E" : "#5B7065"}"></div>
     <div class="log-row-body">
       <div class="log-row-head"><span>${escapeXml(formatDate(l.date))}</span><span class="mono">${l.overall}/4</span></div>
+      ${overloadLabel ? `<p class="log-row-tags" style="color:var(--rust);">${escapeXml(overloadLabel)}</p>` : ""}
       ${tagLabels.length ? `<p class="log-row-tags">${escapeXml(tagLabels.join(", "))}</p>` : ""}
+      ${bodyLabels.length ? `<p class="log-row-tags">${escapeXml(bodyLabels.join(", "))}</p>` : ""}
       ${l.note ? `<p class="log-row-note">${escapeXml(l.note)}</p>` : ""}
     </div>
   </div>`;
@@ -640,6 +843,22 @@ function renderQuickLog() {
   ).join("");
   scaleWrap.querySelectorAll("button").forEach((b) => {
     b.addEventListener("click", () => setLogOverall(Number(b.dataset.val)));
+  });
+
+  const overloadWrap = document.getElementById("quicklog-overload");
+  overloadWrap.innerHTML = OVERLOAD_TYPES.map(
+    (opt) => `<button class="tag-chip${quickLogDraft.overloadType === opt.value ? " active" : ""}" data-val="${opt.value}" style="${quickLogDraft.overloadType === opt.value && opt.value !== "none" ? "background:var(--rust);border-color:var(--rust);color:#F5F6F0;" : quickLogDraft.overloadType === opt.value ? "background:var(--moss);border-color:var(--moss);color:#F5F6F0;" : ""}">${escapeXml(opt.label)}</button>`
+  ).join("");
+  overloadWrap.querySelectorAll("button").forEach((b) => {
+    b.addEventListener("click", () => setOverloadType(b.dataset.val));
+  });
+
+  const bodyWrap = document.getElementById("quicklog-body");
+  bodyWrap.innerHTML = BODY_CHECKS.map(
+    (b) => `<button class="tag-chip${quickLogDraft.bodyChecks.includes(b.id) ? " active" : ""}" data-id="${b.id}" style="${quickLogDraft.bodyChecks.includes(b.id) ? "background:var(--ochre);border-color:var(--ochre);color:#F5F6F0;" : ""}">${escapeXml(b.label)}</button>`
+  ).join("");
+  bodyWrap.querySelectorAll("button").forEach((b) => {
+    b.addEventListener("click", () => toggleBodyCheck(b.dataset.id));
   });
 
   const chipWrap = document.getElementById("quicklog-domains");
@@ -840,6 +1059,139 @@ function renderHistory() {
 }
 
 /* ---------------------------------------------------------
+   RENDER: TOOLKIT (communication scripts + scaffolding plans)
+--------------------------------------------------------- */
+function setToolkitTab(tab) {
+  toolkitTab = tab;
+  renderToolkit();
+}
+
+function renderToolkit() {
+  document.querySelectorAll(".toolkit-tab-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.tab === toolkitTab);
+  });
+  document.getElementById("scripts-panel").style.display = toolkitTab === "scripts" ? "" : "none";
+  document.getElementById("plans-panel").style.display = toolkitTab === "plans" ? "" : "none";
+  if (toolkitTab === "scripts") renderScriptsList();
+  else renderPlansList();
+}
+
+function renderScriptsList() {
+  const wrap = document.getElementById("scripts-list");
+  wrap.innerHTML = SCRIPTS.map((s) => {
+    const val = store.scripts[s.id] !== undefined ? store.scripts[s.id] : s.body;
+    return `<div class="home-card script-card">
+      <h3 class="section-heading" style="margin-bottom:0.5rem;">${escapeXml(s.title)}</h3>
+      <textarea class="note-field script-field" data-id="${s.id}" style="min-height:5rem;margin-bottom:0.75rem;">${escapeXml(val)}</textarea>
+      <div class="action-row">
+        <button class="btn-secondary script-copy-btn" data-id="${s.id}">Copy</button>
+        <button class="btn-ghost script-reset-btn" data-id="${s.id}">Reset to default</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  wrap.querySelectorAll(".script-field").forEach((el) => {
+    el.addEventListener("blur", () => {
+      store.scripts[el.dataset.id] = el.value;
+      saveStore();
+    });
+  });
+  wrap.querySelectorAll(".script-copy-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const field = wrap.querySelector(`.script-field[data-id="${btn.dataset.id}"]`);
+      navigator.clipboard.writeText(field.value);
+      const original = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    });
+  });
+  wrap.querySelectorAll(".script-reset-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      delete store.scripts[btn.dataset.id];
+      saveStore();
+      renderScriptsList();
+    });
+  });
+}
+
+function togglePlanStep(planId, idx) {
+  const plan = PLANS.find((p) => p.id === planId);
+  const current = store.planProgress[planId] || new Array(plan.steps.length).fill(false);
+  current[idx] = !current[idx];
+  store.planProgress[planId] = current;
+  saveStore();
+  renderPlansList();
+}
+
+function renderPlansList() {
+  const wrap = document.getElementById("plans-list");
+  wrap.innerHTML = PLANS.map((p) => {
+    const progress = store.planProgress[p.id] || new Array(p.steps.length).fill(false);
+    const doneCount = progress.filter(Boolean).length;
+    const stepsHtml = p.steps.map((step, i) => `
+      <label class="plan-step">
+        <input type="checkbox" class="plan-step-check" data-plan="${p.id}" data-idx="${i}" ${progress[i] ? "checked" : ""} />
+        <span class="${progress[i] ? "plan-step-done" : ""}">${escapeXml(step)}</span>
+      </label>
+    `).join("");
+    return `<div class="home-card plan-card">
+      <div class="score-head" style="margin-bottom:0.2rem;">
+        <h3 class="section-heading" style="margin:0;">${escapeXml(p.title)}</h3>
+        <span class="band-pill mono" style="color:var(--moss);border:1px solid var(--moss);">${doneCount}/${p.steps.length}</span>
+      </div>
+      <p class="footnote" style="margin:0 0 0.25rem 0; font-style:italic;">${escapeXml(p.source)}</p>
+      <p class="footnote" style="margin-bottom:0.75rem;">${escapeXml(p.note)}</p>
+      ${stepsHtml}
+    </div>`;
+  }).join("");
+
+  wrap.querySelectorAll(".plan-step-check").forEach((el) => {
+    el.addEventListener("change", () => togglePlanStep(el.dataset.plan, Number(el.dataset.idx)));
+  });
+}
+
+/* ---------------------------------------------------------
+   RENDER: SETTINGS (accessibility + data)
+--------------------------------------------------------- */
+function applyAccessibilitySettings() {
+  document.documentElement.classList.toggle("font-large", store.settings.fontScale === "large");
+  document.documentElement.classList.toggle("reduce-motion", !!store.settings.reduceMotion);
+  document.documentElement.classList.toggle("high-contrast", !!store.settings.highContrast);
+}
+
+function toggleSetting(key) {
+  if (key === "fontScale") {
+    store.settings.fontScale = store.settings.fontScale === "large" ? "normal" : "large";
+  } else {
+    store.settings[key] = !store.settings[key];
+  }
+  saveStore();
+  applyAccessibilitySettings();
+  renderSettings();
+}
+
+function renderSettings() {
+  const rows = [
+    { key: "fontScale", label: "Larger text", desc: "Increase text size throughout the app.", on: store.settings.fontScale === "large" },
+    { key: "reduceMotion", label: "Reduce motion", desc: "Turn off transitions and smooth scrolling.", on: store.settings.reduceMotion },
+    { key: "highContrast", label: "High contrast", desc: "Stronger borders and darker text for readability.", on: store.settings.highContrast },
+  ];
+  const wrap = document.getElementById("accessibility-rows");
+  wrap.innerHTML = rows.map((r) => `
+    <div class="settings-row">
+      <div class="settings-row-text">
+        <h3>${escapeXml(r.label)}</h3>
+        <p>${escapeXml(r.desc)}</p>
+      </div>
+      <button class="toggle-switch${r.on ? " on" : ""}" data-key="${r.key}" aria-pressed="${r.on}"><span class="toggle-knob"></span></button>
+    </div>
+  `).join("");
+  wrap.querySelectorAll(".toggle-switch").forEach((btn) => {
+    btn.addEventListener("click", () => toggleSetting(btn.dataset.key));
+  });
+}
+
+/* ---------------------------------------------------------
    EVENTS
 --------------------------------------------------------- */
 document.getElementById("begin-btn").addEventListener("click", beginAssessment);
@@ -861,10 +1213,21 @@ document.getElementById("import-input").addEventListener("change", (e) => {
 });
 document.getElementById("reset-btn").addEventListener("click", resetAllData);
 
+document.getElementById("next-step-save").addEventListener("click", saveNextStep);
+document.getElementById("next-step-done").addEventListener("click", completeNextStep);
+document.getElementById("next-step-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") saveNextStep();
+});
+
 document.querySelectorAll(".nav-btn").forEach((btn) => {
   btn.addEventListener("click", () => goScreen(btn.dataset.nav));
 });
 
+document.querySelectorAll(".toolkit-tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => setToolkitTab(btn.dataset.tab));
+});
+
+applyAccessibilitySettings();
 render();
 
 /* ---------------------------------------------------------
