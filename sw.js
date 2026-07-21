@@ -1,4 +1,4 @@
-const CACHE_NAME = "unmasking-screener-v3";
+const CACHE_NAME = "unmasking-screener-v4";
 const ASSETS = [
   "./",
   "./index.html",
