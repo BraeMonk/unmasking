@@ -348,6 +348,7 @@ let viewingAssessmentId = null; // when viewing a past assessment from history
 let quickLogDraft = { overall: null, domains: [], note: "", bodyChecks: [], overloadType: "none" };
 let trendHidden = new Set(); // domain ids hidden from trend chart
 let toolkitTab = "scripts"; // "scripts" | "plans"
+let reportRange = "30"; // "7" | "30" | "90" | "all"
 
 const totalItems = DOMAINS.reduce((n, d) => n + d.items.length, 0);
 
@@ -734,7 +735,7 @@ function escapeXml(s) {
 /* ---------------------------------------------------------
    RENDER: SHELL
 --------------------------------------------------------- */
-const SCREEN_IDS = ["intro", "home", "quicklog", "quiz", "results", "trends", "history", "scripts", "settings"];
+const SCREEN_IDS = ["intro", "home", "quicklog", "quiz", "results", "trends", "history", "scripts", "settings", "report"];
 
 function render() {
   SCREEN_IDS.forEach((id) => {
@@ -757,6 +758,7 @@ function render() {
   if (screen === "history") renderHistory();
   if (screen === "scripts") renderToolkit();
   if (screen === "settings") renderSettings();
+  if (screen === "report") renderReport();
 }
 
 /* ---------------------------------------------------------
@@ -1192,6 +1194,243 @@ function renderSettings() {
 }
 
 /* ---------------------------------------------------------
+   RENDER: SHAREABLE REPORT
+--------------------------------------------------------- */
+function setReportRange(v) {
+  reportRange = v;
+  renderReport();
+}
+
+function getRangeCutoff(range) {
+  if (range === "all") return null;
+  const d = new Date();
+  d.setDate(d.getDate() - Number(range));
+  return d;
+}
+
+function reportRangeLabel(range) {
+  return range === "all" ? "All logged time" : `Last ${range} days`;
+}
+
+function buildReportData(range) {
+  const cutoff = getRangeCutoff(range);
+  const logs = store.logs
+    .filter((l) => !cutoff || new Date(l.date) >= cutoff)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  const sortedAssessments = [...store.assessments].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const latest = sortedAssessments[sortedAssessments.length - 1] || null;
+  const first = sortedAssessments[0] || null;
+
+  const avgOverall = logs.length ? logs.reduce((a, l) => a + l.overall, 0) / logs.length : null;
+
+  const overloadCounts = { shutdown: 0, meltdown: 0, both: 0, none: 0 };
+  logs.forEach((l) => {
+    const k = l.overloadType || "none";
+    overloadCounts[k] = (overloadCounts[k] || 0) + 1;
+  });
+
+  const domainTagCounts = {};
+  logs.forEach((l) => (l.domains || []).forEach((id) => { domainTagCounts[id] = (domainTagCounts[id] || 0) + 1; }));
+
+  const bodyCheckCounts = {};
+  logs.forEach((l) => (l.bodyChecks || []).forEach((id) => { bodyCheckCounts[id] = (bodyCheckCounts[id] || 0) + 1; }));
+
+  const notes = logs.filter((l) => l.note).slice(-8).reverse();
+
+  const planSummary = PLANS.map((p) => {
+    const progress = store.planProgress[p.id] || [];
+    const done = progress.filter(Boolean).length;
+    return { title: p.title, done, total: p.steps.length };
+  }).filter((p) => p.done > 0);
+
+  return { logs, first, latest, avgOverall, overloadCounts, domainTagCounts, bodyCheckCounts, notes, planSummary };
+}
+
+function renderReport() {
+  document.querySelectorAll(".report-range-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.range === reportRange);
+  });
+
+  const data = buildReportData(reportRange);
+  const wrap = document.getElementById("report-content");
+  const generated = new Date().toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+
+  let html = `
+    <div style="margin-bottom:1.5rem;">
+      <p class="eyebrow">Generated ${escapeXml(generated)}</p>
+      <h1 class="title" style="margin-bottom:0.35rem;">Self-Report Summary</h1>
+      <p class="footnote">${escapeXml(reportRangeLabel(reportRange))} of daily check-ins. Based on self-reported data \u2014 not a clinical or diagnostic assessment.</p>
+    </div>
+  `;
+
+  if (data.latest) {
+    const scoresArr = DOMAINS.map((d) => ({ label: d.label, score: data.latest.scores[d.id] ?? 0 })).sort((a, b) => b.score - a.score);
+    html += `<h2 class="section-heading">Masking profile \u2014 taken ${escapeXml(formatDate(data.latest.date))}</h2>`;
+    html += `<div class="home-card">${scoresArr.map((s) => `
+      <div class="report-row"><span>${escapeXml(s.label)}</span><span class="mono">${s.score} \u00b7 ${bandFor(s.score)}</span></div>
+    `).join("")}</div>`;
+  } else {
+    html += `<p class="footnote">No profile assessment taken yet.</p>`;
+  }
+
+  if (data.first && data.latest && data.first.id !== data.latest.id) {
+    html += `<h2 class="section-heading">Change since first assessment (${escapeXml(formatDate(data.first.date))})</h2>`;
+    html += `<div class="home-card">${DOMAINS.map((d) => {
+      const delta = (data.latest.scores[d.id] ?? 0) - (data.first.scores[d.id] ?? 0);
+      return `<div class="report-row"><span>${escapeXml(d.label)}</span><span class="mono">${delta > 0 ? "+" + delta : delta}</span></div>`;
+    }).join("")}</div>`;
+  }
+
+  html += `<h2 class="section-heading">Daily check-ins (${escapeXml(reportRangeLabel(reportRange))})</h2>`;
+  if (data.logs.length) {
+    const avgLabel = SCALE[Math.round(data.avgOverall)]?.label || "\u2014";
+    html += `<div class="home-card">
+      <div class="report-row"><span>Check-ins logged</span><span class="mono">${data.logs.length}</span></div>
+      <div class="report-row"><span>Average masking level</span><span class="mono">${data.avgOverall.toFixed(1)}/4 \u00b7 ${escapeXml(avgLabel)}</span></div>
+      <div class="report-row"><span>Shutdown episodes</span><span class="mono">${data.overloadCounts.shutdown || 0}</span></div>
+      <div class="report-row"><span>Meltdown episodes</span><span class="mono">${data.overloadCounts.meltdown || 0}</span></div>
+      <div class="report-row"><span>Both at once</span><span class="mono">${data.overloadCounts.both || 0}</span></div>
+    </div>`;
+
+    const topDomainTags = Object.entries(data.domainTagCounts).sort((a, b) => b[1] - a[1]);
+    if (topDomainTags.length) {
+      html += `<div class="home-card"><p class="footnote" style="margin-bottom:0.5rem;">Most frequently tagged areas</p>${topDomainTags.map(([id, count]) => {
+        const d = DOMAINS.find((x) => x.id === id);
+        return `<div class="report-row"><span>${escapeXml(d ? d.label : id)}</span><span class="mono">${count}\u00d7</span></div>`;
+      }).join("")}</div>`;
+    }
+
+    const topBody = Object.entries(data.bodyCheckCounts).sort((a, b) => b[1] - a[1]);
+    if (topBody.length) {
+      html += `<div class="home-card"><p class="footnote" style="margin-bottom:0.5rem;">Body check-ins logged</p>${topBody.map(([id, count]) => {
+        const b = BODY_CHECKS.find((x) => x.id === id);
+        return `<div class="report-row"><span>${escapeXml(b ? b.label : id)}</span><span class="mono">${count}\u00d7</span></div>`;
+      }).join("")}</div>`;
+    }
+
+    if (data.notes.length) {
+      html += `<h3 class="section-heading" style="font-size:0.95rem;">Recent notes, in your own words</h3>`;
+      html += `<div class="home-card">${data.notes.map((l) => `
+        <p class="mono" style="font-size:0.75rem;color:var(--ink-soft);margin:0 0 0.25rem 0;">${escapeXml(formatDate(l.date))}</p>
+        <p style="margin:0 0 0.9rem 0;">${escapeXml(l.note)}</p>
+      `).join("")}</div>`;
+    }
+  } else {
+    html += `<p class="footnote">No check-ins logged in this range.</p>`;
+  }
+
+  if (data.planSummary.length) {
+    html += `<h2 class="section-heading">Scaffolding plan progress</h2>`;
+    html += `<div class="home-card">${data.planSummary.map((p) => `
+      <div class="report-row"><span>${escapeXml(p.title)}</span><span class="mono">${p.done}/${p.total}</span></div>
+    `).join("")}</div>`;
+  }
+
+  html += `<p class="footnote" style="margin-top:2rem;">This report reflects self-reported patterns from a personal tracking app, not a clinical evaluation. It's meant to support a conversation with a partner, therapist, or care provider, not replace a professional assessment.</p>`;
+
+  wrap.innerHTML = html;
+}
+
+function buildReportText() {
+  const data = buildReportData(reportRange);
+  const lines = [];
+  lines.push("SELF-REPORT SUMMARY");
+  lines.push(`Generated ${new Date().toLocaleDateString()}`);
+  lines.push(`${reportRangeLabel(reportRange)} of daily check-ins. Self-reported data, not a clinical assessment.`);
+  lines.push("");
+
+  if (data.latest) {
+    lines.push(`MASKING PROFILE (taken ${formatDate(data.latest.date)})`);
+    DOMAINS.map((d) => ({ label: d.label, score: data.latest.scores[d.id] ?? 0 }))
+      .sort((a, b) => b.score - a.score)
+      .forEach((s) => lines.push(`- ${s.label}: ${s.score} (${bandFor(s.score)})`));
+    lines.push("");
+  }
+
+  if (data.first && data.latest && data.first.id !== data.latest.id) {
+    lines.push(`CHANGE SINCE FIRST ASSESSMENT (${formatDate(data.first.date)})`);
+    DOMAINS.forEach((d) => {
+      const delta = (data.latest.scores[d.id] ?? 0) - (data.first.scores[d.id] ?? 0);
+      lines.push(`- ${d.label}: ${delta > 0 ? "+" + delta : delta}`);
+    });
+    lines.push("");
+  }
+
+  lines.push(`DAILY CHECK-INS (${reportRangeLabel(reportRange)})`);
+  if (data.logs.length) {
+    lines.push(`- Check-ins logged: ${data.logs.length}`);
+    lines.push(`- Average masking level: ${data.avgOverall.toFixed(1)}/4 (${SCALE[Math.round(data.avgOverall)]?.label || ""})`);
+    lines.push(`- Shutdown episodes: ${data.overloadCounts.shutdown || 0}`);
+    lines.push(`- Meltdown episodes: ${data.overloadCounts.meltdown || 0}`);
+    lines.push(`- Both at once: ${data.overloadCounts.both || 0}`);
+    lines.push("");
+
+    const topDomainTags = Object.entries(data.domainTagCounts).sort((a, b) => b[1] - a[1]);
+    if (topDomainTags.length) {
+      lines.push("Most frequently tagged areas:");
+      topDomainTags.forEach(([id, count]) => {
+        const d = DOMAINS.find((x) => x.id === id);
+        lines.push(`- ${d ? d.label : id}: ${count}x`);
+      });
+      lines.push("");
+    }
+
+    const topBody = Object.entries(data.bodyCheckCounts).sort((a, b) => b[1] - a[1]);
+    if (topBody.length) {
+      lines.push("Body check-ins logged:");
+      topBody.forEach(([id, count]) => {
+        const b = BODY_CHECKS.find((x) => x.id === id);
+        lines.push(`- ${b ? b.label : id}: ${count}x`);
+      });
+      lines.push("");
+    }
+
+    if (data.notes.length) {
+      lines.push("Recent notes, in your own words:");
+      data.notes.forEach((l) => lines.push(`[${formatDate(l.date)}] ${l.note}`));
+      lines.push("");
+    }
+  } else {
+    lines.push("No check-ins logged in this range.");
+    lines.push("");
+  }
+
+  if (data.planSummary.length) {
+    lines.push("SCAFFOLDING PLAN PROGRESS");
+    data.planSummary.forEach((p) => lines.push(`- ${p.title}: ${p.done}/${p.total} steps`));
+    lines.push("");
+  }
+
+  lines.push("This report reflects self-reported patterns from a personal tracking app, not a clinical evaluation.");
+  return lines.join("\n");
+}
+
+function copyReportText() {
+  navigator.clipboard.writeText(buildReportText());
+  const btn = document.getElementById("report-copy-btn");
+  const original = btn.textContent;
+  btn.textContent = "Copied";
+  setTimeout(() => { btn.textContent = original; }, 1500);
+}
+
+function downloadReportText() {
+  const blob = new Blob([buildReportText()], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `self-report-${todayKey()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function printReport() {
+  window.print();
+}
+
+/* ---------------------------------------------------------
    EVENTS
 --------------------------------------------------------- */
 document.getElementById("begin-btn").addEventListener("click", beginAssessment);
@@ -1226,6 +1465,15 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
 document.querySelectorAll(".toolkit-tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => setToolkitTab(btn.dataset.tab));
 });
+
+document.querySelectorAll(".report-range-btn").forEach((btn) => {
+  btn.addEventListener("click", () => setReportRange(btn.dataset.range));
+});
+document.getElementById("report-print-btn").addEventListener("click", printReport);
+document.getElementById("report-copy-btn").addEventListener("click", copyReportText);
+document.getElementById("report-download-btn").addEventListener("click", downloadReportText);
+document.getElementById("open-report-btn").addEventListener("click", () => goScreen("report"));
+document.getElementById("report-back-btn").addEventListener("click", () => goScreen("settings"));
 
 applyAccessibilitySettings();
 render();
