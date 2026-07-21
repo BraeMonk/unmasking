@@ -271,7 +271,18 @@ const PLANS = [
   },
 ];
 
-/* Overload type: meltdown (outward) vs shutdown (inward) are distinct states */
+/* ---------------------------------------------------------
+   SOURCES (shown in the disclaimer modal for credit)
+--------------------------------------------------------- */
+const SOURCES = [
+  {
+    name: "Camouflaging/masking research (CAT-Q framework)",
+    attr: "The 28-item map's structure (compensation, masking, assimilation) is inspired by published camouflaging research, reworked into plain reflective language. It is not the CAT-Q instrument itself and isn't a validated or diagnostic scale.",
+  },
+  ...PLANS.map((p) => ({ name: p.title, attr: p.source })),
+];
+
+
 const OVERLOAD_TYPES = [
   { value: "none", label: "Neither" },
   { value: "shutdown", label: "Shutdown" },
@@ -290,10 +301,22 @@ const bandMeta = {
 --------------------------------------------------------- */
 const STORE_KEY = "unmasking-tracker-v1";
 
+const DEFAULT_STORE = () => ({
+  assessments: [],
+  logs: [],
+  scripts: {},
+  settings: { fontScale: "normal", reduceMotion: false, highContrast: false },
+  nextStep: { text: "", done: false },
+  planProgress: {},
+  routines: [],
+  routineLogs: {},
+  disclaimerAcknowledged: false,
+});
+
 function loadStore() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (!raw) return { assessments: [], logs: [], scripts: {}, settings: { fontScale: "normal", reduceMotion: false, highContrast: false }, nextStep: { text: "", done: false }, planProgress: {} };
+    if (!raw) return DEFAULT_STORE();
     const parsed = JSON.parse(raw);
     return {
       assessments: Array.isArray(parsed.assessments) ? parsed.assessments : [],
@@ -304,9 +327,12 @@ function loadStore() {
         : { fontScale: "normal", reduceMotion: false, highContrast: false },
       nextStep: parsed.nextStep && typeof parsed.nextStep === "object" ? parsed.nextStep : { text: "", done: false },
       planProgress: parsed.planProgress && typeof parsed.planProgress === "object" ? parsed.planProgress : {},
+      routines: Array.isArray(parsed.routines) ? parsed.routines : [],
+      routineLogs: parsed.routineLogs && typeof parsed.routineLogs === "object" ? parsed.routineLogs : {},
+      disclaimerAcknowledged: !!parsed.disclaimerAcknowledged,
     };
   } catch (e) {
-    return { assessments: [], logs: [], scripts: {}, settings: { fontScale: "normal", reduceMotion: false, highContrast: false }, nextStep: { text: "", done: false }, planProgress: {} };
+    return DEFAULT_STORE();
   }
 }
 
@@ -347,8 +373,9 @@ let answers = {}; // in-progress assessment answers, key: `${domainId}-${itemInd
 let viewingAssessmentId = null; // when viewing a past assessment from history
 let quickLogDraft = { overall: null, domains: [], note: "", bodyChecks: [], overloadType: "none" };
 let trendHidden = new Set(); // domain ids hidden from trend chart
-let toolkitTab = "scripts"; // "scripts" | "plans"
+let toolkitTab = "scripts"; // "scripts" | "plans" | "routines"
 let reportRange = "30"; // "7" | "30" | "90" | "all"
+let showRoutineForm = false;
 
 const totalItems = DOMAINS.reduce((n, d) => n + d.items.length, 0);
 
@@ -544,6 +571,9 @@ function importData(file) {
           : { fontScale: "normal", reduceMotion: false, highContrast: false },
         nextStep: parsed.nextStep && typeof parsed.nextStep === "object" ? parsed.nextStep : { text: "", done: false },
         planProgress: parsed.planProgress && typeof parsed.planProgress === "object" ? parsed.planProgress : {},
+        routines: Array.isArray(parsed.routines) ? parsed.routines : [],
+        routineLogs: parsed.routineLogs && typeof parsed.routineLogs === "object" ? parsed.routineLogs : {},
+        disclaimerAcknowledged: !!parsed.disclaimerAcknowledged,
       };
       saveStore();
       applyAccessibilitySettings();
@@ -557,7 +587,7 @@ function importData(file) {
 
 function resetAllData() {
   if (!confirm("Delete all assessments and logs from this device? This can't be undone.")) return;
-  store = { assessments: [], logs: [], scripts: {}, settings: store.settings, nextStep: { text: "", done: false }, planProgress: {} };
+  store = { assessments: [], logs: [], scripts: {}, settings: store.settings, nextStep: { text: "", done: false }, planProgress: {}, routines: [], routineLogs: {}, disclaimerAcknowledged: store.disclaimerAcknowledged };
   saveStore();
   goScreen("intro");
 }
@@ -1074,8 +1104,10 @@ function renderToolkit() {
   });
   document.getElementById("scripts-panel").style.display = toolkitTab === "scripts" ? "" : "none";
   document.getElementById("plans-panel").style.display = toolkitTab === "plans" ? "" : "none";
+  document.getElementById("routines-panel").style.display = toolkitTab === "routines" ? "" : "none";
   if (toolkitTab === "scripts") renderScriptsList();
-  else renderPlansList();
+  else if (toolkitTab === "plans") renderPlansList();
+  else renderRoutinesList();
 }
 
 function renderScriptsList() {
@@ -1150,6 +1182,196 @@ function renderPlansList() {
   wrap.querySelectorAll(".plan-step-check").forEach((el) => {
     el.addEventListener("change", () => togglePlanStep(el.dataset.plan, Number(el.dataset.idx)));
   });
+}
+
+/* ---------------------------------------------------------
+   RENDER: ROUTINES (autistic integration / coping tracker)
+   Personal, user-defined routines with daily adherence
+   tracking and simple progression trends. Not sourced from
+   any external framework — purely user data.
+--------------------------------------------------------- */
+function addRoutine(title, stepsText) {
+  const steps = stepsText.split("\n").map((s) => s.trim()).filter(Boolean);
+  if (!title.trim() || !steps.length) return;
+  store.routines.push({
+    id: uid(),
+    title: title.trim(),
+    steps,
+    createdAt: todayKey(),
+  });
+  saveStore();
+}
+
+function deleteRoutine(id) {
+  if (!confirm("Delete this routine and all of its tracked history?")) return;
+  store.routines = store.routines.filter((r) => r.id !== id);
+  delete store.routineLogs[id];
+  saveStore();
+  renderRoutinesList();
+}
+
+function toggleRoutineStep(routineId, dayKey, stepIdx) {
+  const routine = store.routines.find((r) => r.id === routineId);
+  if (!routine) return;
+  if (!store.routineLogs[routineId]) store.routineLogs[routineId] = {};
+  const current = store.routineLogs[routineId][dayKey] || new Array(routine.steps.length).fill(false);
+  current[stepIdx] = !current[stepIdx];
+  store.routineLogs[routineId][dayKey] = current;
+  saveStore();
+  renderRoutinesList();
+}
+
+function routineDayCompletion(routine, dayKey) {
+  const log = (store.routineLogs[routine.id] || {})[dayKey];
+  if (!log) return { done: 0, total: routine.steps.length, allDone: false, logged: false };
+  const done = log.filter(Boolean).length;
+  return { done, total: routine.steps.length, allDone: done === routine.steps.length, logged: true };
+}
+
+function routineStreak(routine) {
+  let streak = 0;
+  const d = new Date();
+  // count consecutive fully-completed days ending today (a partially completed "today" doesn't break the streak yet)
+  for (let i = 0; i < 3650; i++) {
+    const key = todayKey(d);
+    const { allDone, logged } = routineDayCompletion(routine, key);
+    if (allDone) {
+      streak++;
+    } else if (i === 0 && !logged) {
+      // today not logged yet — skip without breaking streak, keep checking yesterday
+    } else {
+      break;
+    }
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+function routineConsistency(routine, days) {
+  const created = new Date(routine.createdAt);
+  const d = new Date();
+  let eligible = 0;
+  let completed = 0;
+  for (let i = 0; i < days; i++) {
+    if (d < created) break;
+    eligible++;
+    if (routineDayCompletion(routine, todayKey(d)).allDone) completed++;
+    d.setDate(d.getDate() - 1);
+  }
+  return eligible ? Math.round((completed / eligible) * 100) : null;
+}
+
+function renderRoutineTrendBars(routine) {
+  const days = 14;
+  const d = new Date();
+  d.setDate(d.getDate() - (days - 1));
+  let bars = "";
+  for (let i = 0; i < days; i++) {
+    const key = todayKey(d);
+    const created = new Date(routine.createdAt);
+    let color = "var(--line)";
+    let heightPct = 8;
+    if (d >= created || key === todayKey()) {
+      const { done, total, logged } = routineDayCompletion(routine, key);
+      if (logged) {
+        const pct = total ? done / total : 0;
+        heightPct = Math.max(pct * 100, 10);
+        color = pct >= 1 ? "#5B7065" : pct >= 0.5 ? "#A8763E" : "#B4654A";
+      }
+    }
+    bars += `<div class="routine-trend-bar" style="height:${heightPct}%;background:${color};" title="${escapeXml(formatDateShort(key))}"></div>`;
+    d.setDate(d.getDate() + 1);
+  }
+  return bars;
+}
+
+function toggleRoutineForm() {
+  showRoutineForm = !showRoutineForm;
+  document.getElementById("routine-add-form").style.display = showRoutineForm ? "" : "none";
+  if (showRoutineForm) document.getElementById("routine-title-input").focus();
+}
+
+function saveRoutineFromForm() {
+  const title = document.getElementById("routine-title-input").value;
+  const steps = document.getElementById("routine-steps-input").value;
+  addRoutine(title, steps);
+  document.getElementById("routine-title-input").value = "";
+  document.getElementById("routine-steps-input").value = "";
+  showRoutineForm = false;
+  document.getElementById("routine-add-form").style.display = "none";
+  renderRoutinesList();
+}
+
+function renderRoutinesList() {
+  const wrap = document.getElementById("routines-list");
+  const today = todayKey();
+
+  if (!store.routines.length) {
+    wrap.innerHTML = `<p class="footnote">No routines yet. Add one for a transition you find hard, a recovery ritual, or a sequence that makes a part of your day predictable.</p>`;
+    return;
+  }
+
+  wrap.innerHTML = store.routines.map((r) => {
+    const todayLog = (store.routineLogs[r.id] || {})[today] || new Array(r.steps.length).fill(false);
+    const doneToday = todayLog.filter(Boolean).length;
+    const streak = routineStreak(r);
+    const consistency = routineConsistency(r, 14);
+    const stepsHtml = r.steps.map((step, i) => `
+      <label class="routine-step-row">
+        <input type="checkbox" class="routine-step-check" data-routine="${r.id}" data-idx="${i}" ${todayLog[i] ? "checked" : ""} />
+        <span class="${todayLog[i] ? "routine-step-done" : ""}">${escapeXml(step)}</span>
+      </label>
+    `).join("");
+    return `<div class="home-card routine-card">
+      <div class="score-head" style="margin-bottom:0.1rem;">
+        <h3 class="section-heading" style="margin:0;">${escapeXml(r.title)}</h3>
+        <button class="btn-ghost routine-delete-btn" data-id="${r.id}" style="padding:0.25rem 0.4rem;">Delete</button>
+      </div>
+      <div class="routine-stat-row">
+        <div class="routine-stat"><b>${doneToday}/${r.steps.length}</b>today</div>
+        <div class="routine-stat"><b>${streak}</b>day streak</div>
+        <div class="routine-stat"><b>${consistency === null ? "\u2013" : consistency + "%"}</b>last 14 days</div>
+      </div>
+      <div class="routine-trend-row">${renderRoutineTrendBars(r)}</div>
+      ${stepsHtml}
+    </div>`;
+  }).join("");
+
+  wrap.querySelectorAll(".routine-step-check").forEach((el) => {
+    el.addEventListener("change", () => toggleRoutineStep(el.dataset.routine, today, Number(el.dataset.idx)));
+  });
+  wrap.querySelectorAll(".routine-delete-btn").forEach((btn) => {
+    btn.addEventListener("click", () => deleteRoutine(btn.dataset.id));
+  });
+}
+
+
+/* ---------------------------------------------------------
+   DISCLAIMER MODAL
+--------------------------------------------------------- */
+function renderDisclaimerSources() {
+  const wrap = document.getElementById("disclaimer-sources");
+  wrap.innerHTML = SOURCES.map((s) => `
+    <div class="source-row">
+      <div class="source-name">${escapeXml(s.name)}</div>
+      <div class="source-attr">${escapeXml(s.attr)}</div>
+    </div>
+  `).join("");
+}
+
+function showDisclaimer() {
+  renderDisclaimerSources();
+  document.getElementById("disclaimer-overlay").classList.add("show");
+}
+
+function hideDisclaimer() {
+  document.getElementById("disclaimer-overlay").classList.remove("show");
+}
+
+function acknowledgeDisclaimer() {
+  store.disclaimerAcknowledged = true;
+  saveStore();
+  hideDisclaimer();
 }
 
 /* ---------------------------------------------------------
@@ -1244,7 +1466,13 @@ function buildReportData(range) {
     return { title: p.title, done, total: p.steps.length };
   }).filter((p) => p.done > 0);
 
-  return { logs, first, latest, avgOverall, overloadCounts, domainTagCounts, bodyCheckCounts, notes, planSummary };
+  const routineSummary = store.routines.map((r) => ({
+    title: r.title,
+    streak: routineStreak(r),
+    consistency: routineConsistency(r, 14),
+  }));
+
+  return { logs, first, latest, avgOverall, overloadCounts, domainTagCounts, bodyCheckCounts, notes, planSummary, routineSummary };
 }
 
 function renderReport() {
@@ -1327,6 +1555,13 @@ function renderReport() {
     `).join("")}</div>`;
   }
 
+  if (data.routineSummary.length) {
+    html += `<h2 class="section-heading">Routine tracking</h2>`;
+    html += `<div class="home-card">${data.routineSummary.map((r) => `
+      <div class="report-row"><span>${escapeXml(r.title)}</span><span class="mono">${r.streak}d streak &middot; ${r.consistency === null ? "\u2013" : r.consistency + "%"} / 14d</span></div>
+    `).join("")}</div>`;
+  }
+
   html += `<p class="footnote" style="margin-top:2rem;">This report reflects self-reported patterns from a personal tracking app, not a clinical evaluation. It's meant to support a conversation with a partner, therapist, or care provider, not replace a professional assessment.</p>`;
 
   wrap.innerHTML = html;
@@ -1399,6 +1634,12 @@ function buildReportText() {
   if (data.planSummary.length) {
     lines.push("SCAFFOLDING PLAN PROGRESS");
     data.planSummary.forEach((p) => lines.push(`- ${p.title}: ${p.done}/${p.total} steps`));
+    lines.push("");
+  }
+
+  if (data.routineSummary.length) {
+    lines.push("ROUTINE TRACKING");
+    data.routineSummary.forEach((r) => lines.push(`- ${r.title}: ${r.streak}-day streak, ${r.consistency === null ? "no data" : r.consistency + "%"} over last 14 days`));
     lines.push("");
   }
 
@@ -1475,8 +1716,19 @@ document.getElementById("report-download-btn").addEventListener("click", downloa
 document.getElementById("open-report-btn").addEventListener("click", () => goScreen("report"));
 document.getElementById("report-back-btn").addEventListener("click", () => goScreen("settings"));
 
+document.getElementById("disclaimer-ack-btn").addEventListener("click", acknowledgeDisclaimer);
+document.getElementById("open-disclaimer-btn").addEventListener("click", showDisclaimer);
+
+document.getElementById("routine-add-toggle").addEventListener("click", toggleRoutineForm);
+document.getElementById("routine-save-btn").addEventListener("click", saveRoutineFromForm);
+document.getElementById("routine-cancel-btn").addEventListener("click", () => {
+  showRoutineForm = false;
+  document.getElementById("routine-add-form").style.display = "none";
+});
+
 applyAccessibilitySettings();
 render();
+if (!store.disclaimerAcknowledged) showDisclaimer();
 
 /* ---------------------------------------------------------
    PWA: service worker registration + install prompt
