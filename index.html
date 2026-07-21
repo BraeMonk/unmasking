@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Unmasking Map &mdash; Track where you mask</title>
 <meta name="description" content="A progress tracker for autism unmasking: a 28-item terrain map plus daily quick logs, trends, and history." />
 
@@ -434,6 +434,23 @@
   .plan-step:first-of-type { border-top: none; margin-top: 0.5rem; }
   .plan-step input[type="checkbox"] { margin-top: 0.2rem; accent-color: var(--moss); flex-shrink: 0; }
   .plan-step-done { color: var(--ink-soft); text-decoration: line-through; }
+
+  /* ---------- report ---------- */
+  .report-range-row { margin-bottom: 1rem; }
+  .report-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.75rem; }
+  .report-actions button { flex: 1; min-width: 9rem; padding: 0.7rem 0.75rem; font-size: 0.8125rem; }
+  .report-row {
+    display: flex; justify-content: space-between; gap: 1rem;
+    padding: 0.5rem 0; border-top: 1px solid var(--line); font-size: 0.875rem;
+  }
+  .report-row:first-child { border-top: none; }
+
+  @media print {
+    #bottom-nav, .report-range-row, .report-actions, .report-back-btn { display: none !important; }
+    body { background: #fff; }
+    .wrap { padding: 0.5rem 0.25rem; max-width: 100%; }
+    .home-card, .report-row { border-color: #ccc; }
+  }
 </style>
 </head>
 <body>
@@ -637,6 +654,17 @@
     <h2 class="section-heading">Accessibility</h2>
     <div class="home-card" id="accessibility-rows"></div>
 
+    <h2 class="section-heading">Share</h2>
+    <div class="home-card">
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <h3>Shareable report</h3>
+          <p>A single readable summary of your profile, check-ins, and progress &mdash; to save as a PDF, copy, or hand to a partner or provider.</p>
+        </div>
+        <button class="btn-secondary" id="open-report-btn">Open</button>
+      </div>
+    </div>
+
     <h2 class="section-heading">Data</h2>
     <div class="home-card">
       <div class="settings-row">
@@ -664,6 +692,26 @@
     </div>
 
     <p class="footnote">Everything is stored only on this device, in your browser's local storage. Nothing is sent anywhere. Export regularly if you'd like a backup.</p>
+  </div>
+
+  <!-- REPORT -->
+  <div id="screen-report" class="screen">
+    <button class="btn-ghost report-back-btn" id="report-back-btn" style="margin-bottom:1rem;">&larr; Settings</button>
+
+    <div class="toolkit-tabs report-range-row">
+      <button class="toolkit-tab-btn report-range-btn" data-range="7">7d</button>
+      <button class="toolkit-tab-btn report-range-btn active" data-range="30">30d</button>
+      <button class="toolkit-tab-btn report-range-btn" data-range="90">90d</button>
+      <button class="toolkit-tab-btn report-range-btn" data-range="all">All</button>
+    </div>
+
+    <div class="report-actions">
+      <button class="btn-primary" id="report-print-btn">Print / Save as PDF</button>
+      <button class="btn-secondary" id="report-copy-btn">Copy as text</button>
+      <button class="btn-secondary" id="report-download-btn">Download .txt</button>
+    </div>
+
+    <div id="report-content"></div>
   </div>
 
 </div>
