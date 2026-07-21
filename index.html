@@ -445,6 +445,56 @@
   }
   .report-row:first-child { border-top: none; }
 
+  /* ---------- disclaimer modal ---------- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(43, 46, 40, 0.55);
+    z-index: 100;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+  .modal-overlay.show { display: flex; align-items: flex-start; justify-content: center; }
+  .modal-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    max-width: 34rem;
+    width: 100%;
+    margin: 2rem auto;
+    padding: 1.75rem 1.5rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .source-row { padding: 0.6rem 0; border-top: 1px solid var(--line); font-size: 0.8125rem; }
+  .source-row:first-child { border-top: none; }
+  .source-row .source-name { font-weight: 500; }
+  .source-row .source-attr { color: var(--ink-soft); }
+
+  /* ---------- routines ---------- */
+  .routine-card .score-head { justify-content: space-between; align-items: flex-start; }
+  .routine-stat-row { display: flex; gap: 1rem; margin: 0.5rem 0 0.85rem 0; }
+  .routine-stat { font-size: 0.75rem; color: var(--ink-soft); }
+  .routine-stat b { font-family: 'IBM Plex Mono', monospace; color: var(--ink); font-size: 0.9375rem; display: block; }
+  .routine-trend-row { display: flex; align-items: flex-end; gap: 2px; height: 28px; margin: 0.5rem 0 0.85rem 0; }
+  .routine-trend-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 3px; background: var(--line); }
+  .routine-step-row { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.5rem 0; border-top: 1px solid var(--line); font-size: 0.875rem; line-height: 1.5; cursor: pointer; }
+  .routine-step-row:first-of-type { border-top: none; margin-top: 0.25rem; }
+  .routine-step-row input[type="checkbox"] { margin-top: 0.2rem; accent-color: var(--moss); flex-shrink: 0; }
+  .routine-step-done { color: var(--ink-soft); text-decoration: line-through; }
+  .routine-form-field {
+    width: 100%;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.875rem;
+    color: var(--ink);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  textarea.routine-form-field { min-height: 5rem; resize: vertical; }
+
   @media print {
     #bottom-nav, .report-range-row, .report-actions, .report-back-btn { display: none !important; }
     body { background: #fff; }
@@ -454,6 +504,21 @@
 </style>
 </head>
 <body>
+
+<!-- DISCLAIMER MODAL -->
+<div id="disclaimer-overlay" class="modal-overlay">
+  <div class="modal-card">
+    <p class="eyebrow">Before you begin</p>
+    <h2 class="domain-label" style="font-size:1.5rem;">This isn't a diagnostic tool</h2>
+    <p class="lede">Unmasking Map is a self-reflection and tracking app. It does not diagnose autism, ADHD, or any other condition, and it isn't a substitute for an assessment by a qualified clinician.</p>
+    <p class="lede">The 28-item map is a plain-language reflection tool inspired by published camouflaging/masking research (CAT-Q style: compensation, masking, assimilation), reworked into everyday statements &mdash; it is not a validated clinical instrument, and your scores are self-reported patterns, not a score of who you are.</p>
+    <p class="lede">The scaffolding plans and routine tools in the Toolkit are for personal coping and integration support only. Where a plan is based on someone else's published method, it's credited below; use them alongside, not instead of, care from a professional or program you trust.</p>
+    <h3 class="section-heading">Sources used in this app</h3>
+    <div id="disclaimer-sources"></div>
+    <button class="btn-primary" id="disclaimer-ack-btn" style="width:100%;margin-top:1.25rem;">I understand, continue</button>
+  </div>
+</div>
+
 <div class="wrap">
 
   <div id="install-banner" class="install-banner">
@@ -633,6 +698,7 @@
     <div class="toolkit-tabs">
       <button class="toolkit-tab-btn active" data-tab="scripts">Scripts</button>
       <button class="toolkit-tab-btn" data-tab="plans">Scaffolding plans</button>
+      <button class="toolkit-tab-btn" data-tab="routines">Routines</button>
     </div>
 
     <div id="scripts-panel">
@@ -644,12 +710,39 @@
       <p class="lede">Existing, published frameworks only &mdash; nothing improvised. Each one is credited to who developed it, with steps drawn from how they actually describe the method.</p>
       <div id="plans-list"></div>
     </div>
+
+    <div id="routines-panel" style="display:none;">
+      <p class="lede">Personal routines for integrating and coping in allistic-majority spaces &mdash; a transition ritual for work, a sensory recovery routine after socializing, a morning sequence that makes the day predictable. Track daily and watch whether they get easier over time.</p>
+      <div id="routine-add-wrap">
+        <button class="btn-secondary" id="routine-add-toggle" style="width:100%;margin-bottom:1.25rem;">+ New routine</button>
+        <div id="routine-add-form" style="display:none;margin-bottom:1.25rem;">
+          <input type="text" id="routine-title-input" class="routine-form-field" placeholder="Routine name (e.g. Morning start-up)" />
+          <textarea id="routine-steps-input" class="routine-form-field" placeholder="One step per line&#10;e.g.&#10;Noise-cancelling headphones on&#10;Check the visual schedule&#10;Five minutes of quiet before opening email"></textarea>
+          <div class="action-row">
+            <button class="btn-primary" id="routine-save-btn">Save routine</button>
+            <button class="btn-ghost" id="routine-cancel-btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div id="routines-list"></div>
+    </div>
   </div>
 
   <!-- SETTINGS -->
   <div id="screen-settings" class="screen">
     <p class="eyebrow">Your data</p>
     <h1 class="title">Settings</h1>
+
+    <h2 class="section-heading">About</h2>
+    <div class="home-card">
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <h3>About &amp; sources</h3>
+          <p>Re-read the not-a-diagnostic-tool disclaimer and see every published method credited in this app.</p>
+        </div>
+        <button class="btn-secondary" id="open-disclaimer-btn">View</button>
+      </div>
+    </div>
 
     <h2 class="section-heading">Accessibility</h2>
     <div class="home-card" id="accessibility-rows"></div>
