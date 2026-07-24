@@ -4,7 +4,7 @@
    (CAT-Q style: Compensation / Masking / Assimilation) into
    plain reflective statements. Not a diagnostic instrument.
 --------------------------------------------------------- */
-const DOMAINS = [
+const MASKING_DOMAINS = [
   {
     id: "scripting",
     label: "Social Scripting",
@@ -99,8 +99,91 @@ const SCALE = [
   { value: 4, label: "Almost always true" },
 ];
 
+/* ---------------------------------------------------------
+   RAADS-R-STYLE TRAIT SCREENING
+   An original, plain-language reflection tool whose four
+   categories (social relatedness, circumscribed interests,
+   language, sensory-motor) are inspired by the structure of
+   the published RAADS-R. Wording is written fresh for this
+   app, uses a different 0-4 scale, and is NOT the RAADS-R
+   instrument \u2014 no validated clinical cutoff applies.
+--------------------------------------------------------- */
+const RAADS_DOMAINS = [
+  {
+    id: "raads-social",
+    label: "Social Relatedness",
+    short: "How social connection actually works for you",
+    color: "#7A6C5D",
+    items: [
+      "I have to consciously work out what other people are feeling instead of sensing it automatically.",
+      "I've been told my response in a conversation seemed mistimed or \u201coff\u201d somehow.",
+      "Small talk feels like a task with rules to remember, not something that comes naturally.",
+      "I find it hard to know how a relationship is actually going unless someone tells me directly.",
+    ],
+  },
+  {
+    id: "raads-interests",
+    label: "Circumscribed Interests",
+    short: "The pull of a narrow, deep focus",
+    color: "#4A6B8A",
+    items: [
+      "I can focus so completely on a topic that everything else falls away for hours.",
+      "I've built extremely detailed knowledge of subjects that don't interest most people around me.",
+      "I return to the same few interests repeatedly rather than sampling broadly.",
+      "Being interrupted mid-focus on something I care about feels disproportionately disruptive.",
+    ],
+  },
+  {
+    id: "raads-language",
+    label: "Language & Communication",
+    short: "How literally and precisely you use words",
+    color: "#8A6BA3",
+    items: [
+      "I tend to take statements literally and miss sarcasm or implied meaning in the moment.",
+      "I notice I use more formal or precise language than the people around me.",
+      "I've been told my tone of voice doesn't always match what I'm actually feeling.",
+      "I struggle to know when it's my turn to speak in a group conversation.",
+    ],
+  },
+  {
+    id: "raads-sensorimotor",
+    label: "Sensory-Motor",
+    short: "How your body registers the world",
+    color: "#4A8A6B",
+    items: [
+      "Certain sounds, lights, or textures affect me far more intensely than they seem to affect others.",
+      "I've been described as clumsy, or I notice my movements aren't always smoothly coordinated.",
+      "I can lose track of pain, temperature, or hunger until it becomes severe.",
+      "Repetitive movement or sound, mine or someone else's, is either very soothing or very distressing, with little middle ground.",
+    ],
+  },
+];
+
+const RAADS_BAND_COPY = {
+  "raads-social": {
+    low: "Social reciprocity mostly feels intuitive for you right now.",
+    moderate: "You're doing conscious, real-time work to track social back-and-forth that seems to come more automatically for others.",
+    high: "Social relatedness takes significant conscious effort for you. This is a core screening domain \u2014 worth raising with a clinician if you're considering a formal assessment.",
+  },
+  "raads-interests": {
+    low: "Your interests don't dominate your time or attention in a way that stands out to you.",
+    moderate: "You notice a strong pull toward a narrow set of interests, with real focus and depth.",
+    high: "You experience intense, narrow, absorbing focus \u2014 a hallmark trait this screening is built to pick up on.",
+  },
+  "raads-language": {
+    low: "Literal interpretation and conversational timing aren't major friction points for you.",
+    moderate: "You notice some friction around implied meaning, tone, or conversational turn-taking.",
+    high: "Language pragmatics \u2014 sarcasm, implication, turn-taking, tone \u2014 take real conscious effort. This is one of the domains most worth discussing with a clinician.",
+  },
+  "raads-sensorimotor": {
+    low: "Sensory input and body signals feel fairly ordinary to you.",
+    moderate: "You notice real differences in how sensory input or body signals register for you.",
+    high: "Sensory-motor differences are pronounced for you \u2014 intense reactions to input, or a body that under- or over-signals things like pain and temperature.",
+  },
+};
+
 /* Band copy per domain */
-const BAND_COPY = {
+const MASKING_BAND_COPY = {
   scripting: {
     low: "Scripting shows up occasionally, but you're mostly working from real-time responses. Modules here would focus on maintenance, not overhaul.",
     moderate: "You lean on prepared language more than you'd probably like. A good starting module: identifying which scripts are load-bearing vs. habitual.",
@@ -135,6 +218,30 @@ const BAND_COPY = {
     low: "You're not hiding much executive effort right now.",
     moderate: "You're covering for some struggle with planning, task effort, or fatigue. Worth identifying one low-stakes place to let that show.",
     high: "You're likely masking significant fatigue or executive load. This tends to be a root cause of burnout \u2014 a high-priority module.",
+  },
+};
+
+const BAND_COPY = { ...MASKING_BAND_COPY, ...RAADS_BAND_COPY };
+
+/* ---------------------------------------------------------
+   ASSESSMENT TYPES
+   Registry so the quiz flow, results, trends, and reports can
+   all work generically across whichever screening is active.
+--------------------------------------------------------- */
+const ASSESSMENT_TYPES = {
+  masking: {
+    id: "masking",
+    label: "Masking Domains",
+    shortLabel: "Masking",
+    tagline: "The 28-item map across seven masking domains \u2014 what you hide, and how.",
+    domains: MASKING_DOMAINS,
+  },
+  raads: {
+    id: "raads",
+    label: "Autistic Traits (RAADS-R style)",
+    shortLabel: "Traits",
+    tagline: "A 16-item reflection across four trait categories \u2014 not what you hide, but how your wiring works.",
+    domains: RAADS_DOMAINS,
   },
 };
 
@@ -279,6 +386,10 @@ const SOURCES = [
     name: "Camouflaging/masking research (CAT-Q framework)",
     attr: "The 28-item map's structure (compensation, masking, assimilation) is inspired by published camouflaging research, reworked into plain reflective language. It is not the CAT-Q instrument itself and isn't a validated or diagnostic scale.",
   },
+  {
+    name: "RAADS-R-style trait screening (adapted)",
+    attr: "The optional second screening's four categories (social relatedness, circumscribed interests, language, sensory-motor) are inspired by the structure of the published Ritvo Autism Asperger Diagnostic Scale-Revised (RAADS-R). Wording here is original, uses a different scoring scale, and is not the RAADS-R instrument \u2014 it has no validated clinical cutoff.",
+  },
   ...PLANS.map((p) => ({ name: p.title, attr: p.source })),
 ];
 
@@ -373,11 +484,22 @@ let answers = {}; // in-progress assessment answers, key: `${domainId}-${itemInd
 let viewingAssessmentId = null; // when viewing a past assessment from history
 let quickLogDraft = { overall: null, domains: [], note: "", bodyChecks: [], overloadType: "none" };
 let trendHidden = new Set(); // domain ids hidden from trend chart
+let trendType = "masking"; // which screening's domains the trend chart/legend shows
 let toolkitTab = "scripts"; // "scripts" | "plans" | "routines"
 let reportRange = "30"; // "7" | "30" | "90" | "all"
 let showRoutineForm = false;
 
-const totalItems = DOMAINS.reduce((n, d) => n + d.items.length, 0);
+let currentAssessmentType = "masking"; // "masking" | "raads" — which screening is active in the quiz
+let assessmentQueue = []; // remaining screening types to run after this one (used for "Both")
+let assessmentPairId = null; // links two entries together when "Both" was chosen
+
+function currentDomains() {
+  return ASSESSMENT_TYPES[currentAssessmentType].domains;
+}
+
+function totalItemsFor(type) {
+  return ASSESSMENT_TYPES[type].domains.reduce((n, d) => n + d.items.length, 0);
+}
 
 function answeredCount() {
   return Object.keys(answers).length;
@@ -392,8 +514,8 @@ function setAnswer(domainId, itemIndex, value) {
   render();
 }
 
-function computeScoresFromAnswers(ans) {
-  return DOMAINS.map((d) => {
+function computeScoresFromAnswers(ans, domains = currentDomains()) {
+  return domains.map((d) => {
     const vals = d.items.map((_, i) => ans[`${d.id}-${i}`] ?? 0);
     const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
     return {
@@ -416,8 +538,16 @@ function goScreen(next) {
 }
 
 function goNext() {
-  if (domainIndex < DOMAINS.length - 1) {
+  const domains = currentDomains();
+  if (domainIndex < domains.length - 1) {
     domainIndex += 1;
+    screen = "quiz";
+  } else if (assessmentQueue.length) {
+    // finish this leg, then roll straight into the next screening ("Both")
+    finishAssessment();
+    currentAssessmentType = assessmentQueue.shift();
+    answers = {};
+    domainIndex = 0;
     screen = "quiz";
   } else {
     finishAssessment();
@@ -438,6 +568,23 @@ function goBack() {
   render();
 }
 
+function openQuizChoice() {
+  goScreen("quiz-choice");
+}
+
+function chooseAssessmentType(type) {
+  if (type === "both") {
+    currentAssessmentType = "masking";
+    assessmentQueue = ["raads"];
+    assessmentPairId = uid();
+  } else {
+    currentAssessmentType = type;
+    assessmentQueue = [];
+    assessmentPairId = null;
+  }
+  beginAssessment();
+}
+
 function beginAssessment() {
   answers = {};
   domainIndex = 0;
@@ -446,10 +593,13 @@ function beginAssessment() {
 }
 
 function finishAssessment() {
-  const scores = computeScoresFromAnswers(answers);
+  const domains = currentDomains();
+  const scores = computeScoresFromAnswers(answers, domains);
   const entry = {
     id: uid(),
     date: new Date().toISOString(),
+    type: currentAssessmentType,
+    pairId: assessmentPairId,
     scores: scores.reduce((acc, s) => { acc[s.id] = s.score; return acc; }, {}),
     answers: { ...answers },
   };
@@ -690,7 +840,10 @@ function renderMiniRadar(scores, svgEl) {
    TREND CHART (multi-line, over assessment history)
 --------------------------------------------------------- */
 function renderTrendChart(svgEl) {
-  const list = store.assessments.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+  const list = store.assessments
+    .filter((a) => (a.type || "masking") === trendType)
+    .slice()
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
   const W = 400, H = 260;
   const padL = 28, padR = 12, padT = 16, padB = 34;
   const plotW = W - padL - padR, plotH = H - padT - padB;
@@ -716,7 +869,7 @@ function renderTrendChart(svgEl) {
     parts.push(`<text x="${xFor(i)}" y="${H - padB + 16}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5C6156">${escapeXml(formatDateShort(list[i].date))}</text>`);
   });
 
-  DOMAINS.forEach((d) => {
+  ASSESSMENT_TYPES[trendType].domains.forEach((d) => {
     if (trendHidden.has(d.id)) return;
     const pts = list.map((entry, i) => `${xFor(i)},${yFor(entry.scores[d.id] ?? 0)}`);
     parts.push(`<polyline points="${pts.join(" ")}" fill="none" stroke="${d.color}" stroke-width="2"/>`);
@@ -765,7 +918,7 @@ function escapeXml(s) {
 /* ---------------------------------------------------------
    RENDER: SHELL
 --------------------------------------------------------- */
-const SCREEN_IDS = ["intro", "home", "quicklog", "quiz", "results", "trends", "history", "scripts", "settings", "report"];
+const SCREEN_IDS = ["intro", "quiz-choice", "home", "quicklog", "quiz", "results", "trends", "history", "scripts", "settings", "report"];
 
 function render() {
   SCREEN_IDS.forEach((id) => {
@@ -774,7 +927,7 @@ function render() {
   });
 
   const nav = document.getElementById("bottom-nav");
-  const showNav = screen !== "intro" && screen !== "quiz";
+  const showNav = screen !== "intro" && screen !== "quiz" && screen !== "quiz-choice";
   nav.classList.toggle("show", showNav);
   document.querySelectorAll(".nav-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.nav === screen || (b.dataset.nav === "results" && screen === "results"));
@@ -820,9 +973,11 @@ function renderHome() {
   if (latest) {
     latestWrap.style.display = "";
     emptyWrap.style.display = "none";
-    const scores = DOMAINS.map((d) => ({ ...d, score: latest.scores[d.id] ?? 0 }));
+    const latestTypeCfg = ASSESSMENT_TYPES[latest.type || "masking"];
+    const scores = latestTypeCfg.domains.map((d) => ({ ...d, score: latest.scores[d.id] ?? 0 }));
     renderMiniRadar(scores, document.getElementById("home-mini-radar"));
-    document.getElementById("home-latest-date").textContent = `Last full map: ${formatDate(latest.date)}`;
+    document.querySelector("#home-latest-wrap h3").textContent = `Latest ${latestTypeCfg.shortLabel} map`;
+    document.getElementById("home-latest-date").textContent = `Last taken: ${formatDate(latest.date)}${latest.pairId ? " \u00b7 both screenings" : ""}`;
 
     const sorted = scores.slice().sort((a, b) => b.score - a.score);
     const top = sorted.slice(0, 2);
@@ -833,8 +988,8 @@ function renderHome() {
     const daysSince = Math.floor((Date.now() - new Date(latest.date).getTime()) / 86400000);
     document.getElementById("home-recheck-hint").textContent =
       daysSince >= 21
-        ? `It's been ${daysSince} days \u2014 worth retaking the full map to see what's shifted.`
-        : `Next full map recommended around ${formatDate(new Date(new Date(latest.date).getTime() + 28 * 86400000).toISOString())}.`;
+        ? `It's been ${daysSince} days \u2014 worth retaking a screening to see what's shifted.`
+        : `Next check-in recommended around ${formatDate(new Date(new Date(latest.date).getTime() + 28 * 86400000).toISOString())}.`;
   } else {
     latestWrap.style.display = "none";
     emptyWrap.style.display = "";
@@ -850,7 +1005,7 @@ function renderHome() {
 }
 
 function logRowHtml(l) {
-  const tagLabels = l.domains.map((id) => DOMAINS.find((d) => d.id === id)?.label).filter(Boolean);
+  const tagLabels = l.domains.map((id) => MASKING_DOMAINS.find((d) => d.id === id)?.label).filter(Boolean);
   const bodyLabels = (l.bodyChecks || []).map((id) => BODY_CHECKS.find((b) => b.id === id)?.label).filter(Boolean);
   const overloadLabel = l.overloadType && l.overloadType !== "none" ? OVERLOAD_TYPES.find((o) => o.value === l.overloadType)?.label : null;
   return `<div class="log-row">
@@ -894,7 +1049,7 @@ function renderQuickLog() {
   });
 
   const chipWrap = document.getElementById("quicklog-domains");
-  chipWrap.innerHTML = DOMAINS.map(
+  chipWrap.innerHTML = MASKING_DOMAINS.map(
     (d) => `<button class="tag-chip${quickLogDraft.domains.includes(d.id) ? " active" : ""}" data-id="${d.id}" style="${quickLogDraft.domains.includes(d.id) ? `background:${d.color};border-color:${d.color};color:#F5F6F0;` : ""}">${escapeXml(d.label)}</button>`
   ).join("");
   chipWrap.querySelectorAll("button").forEach((b) => {
@@ -911,8 +1066,11 @@ function renderQuickLog() {
    RENDER: QUIZ (full assessment)
 --------------------------------------------------------- */
 function renderQuiz() {
-  const d = DOMAINS[domainIndex];
-  document.getElementById("domain-counter").textContent = `Domain ${domainIndex + 1} of ${DOMAINS.length}`;
+  const domains = currentDomains();
+  const d = domains[domainIndex];
+  const typeCfg = ASSESSMENT_TYPES[currentAssessmentType];
+  const totalItems = totalItemsFor(currentAssessmentType);
+  document.getElementById("domain-counter").textContent = `${typeCfg.shortLabel} \u00b7 Domain ${domainIndex + 1} of ${domains.length}`;
   document.getElementById("answer-counter").textContent = `${answeredCount()} / ${totalItems} answered`;
   document.getElementById("progress-fill").style.width = `${(answeredCount() / totalItems) * 100}%`;
   document.getElementById("domain-label").textContent = d.label;
@@ -948,33 +1106,70 @@ function renderQuiz() {
 
   const nextBtn = document.getElementById("next-btn");
   nextBtn.disabled = !domainComplete(d);
-  nextBtn.textContent = domainIndex < DOMAINS.length - 1 ? "Next domain \u2192" : "See my map \u2192";
+  if (domainIndex < domains.length - 1) {
+    nextBtn.textContent = "Next domain \u2192";
+  } else if (assessmentQueue.length) {
+    nextBtn.textContent = `Continue to ${ASSESSMENT_TYPES[assessmentQueue[0]].shortLabel} \u2192`;
+  } else {
+    nextBtn.textContent = "See my results \u2192";
+  }
 }
 
 /* ---------------------------------------------------------
    RENDER: RESULTS (fresh completion OR viewing history entry)
 --------------------------------------------------------- */
-function renderResults() {
-  const entry = viewingAssessmentId
-    ? store.assessments.find((a) => a.id === viewingAssessmentId)
-    : store.assessments[store.assessments.length - 1];
-  if (!entry) { goScreen("home"); return; }
+function renderResultsSection(entry, typeCfg, showHeading) {
+  const domains = typeCfg.domains;
+  const sameType = store.assessments
+    .filter((a) => (a.type || "masking") === typeCfg.id)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  const idx = sameType.findIndex((a) => a.id === entry.id);
+  const prev = idx > 0 ? sameType[idx - 1] : null;
 
-  const idx = store.assessments.findIndex((a) => a.id === entry.id);
-  const prev = idx > 0 ? store.assessments[idx - 1] : null;
+  const scores = domains.map((d) => ({ ...d, score: entry.scores[d.id] ?? 0 }));
+  const prevScores = prev ? domains.map((d) => ({ ...d, score: prev.scores[d.id] ?? 0 })) : null;
 
-  const scores = DOMAINS.map((d) => ({ ...d, score: entry.scores[d.id] ?? 0 }));
-  const prevScores = prev ? DOMAINS.map((d) => ({ ...d, score: prev.scores[d.id] ?? 0 })) : null;
+  const section = document.createElement("div");
+  section.className = "results-section";
 
-  document.getElementById("results-date").textContent = formatDate(entry.date);
-  renderRadarChart(scores, document.getElementById("radar-chart"), prevScores);
+  if (showHeading) {
+    const h = document.createElement("h2");
+    h.className = "domain-label";
+    h.style.fontSize = "1.375rem";
+    h.textContent = typeCfg.label;
+    section.appendChild(h);
+  }
 
-  document.getElementById("results-compare-note").textContent = prev
-    ? `Dashed line shows your previous map from ${formatDate(prev.date)}.`
-    : "Take the assessment again later to compare against this map.";
+  const chartCard = document.createElement("div");
+  chartCard.className = "chart-card";
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("viewBox", "0 0 400 340");
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  chartCard.appendChild(svg);
+  section.appendChild(chartCard);
+  renderRadarChart(scores, svg, prevScores);
 
-  const container = document.getElementById("scores-container");
-  container.innerHTML = "";
+  const note = document.createElement("p");
+  note.className = "footnote";
+  note.style.marginBottom = "1rem";
+  note.textContent = prev
+    ? `Dashed line shows your previous ${typeCfg.shortLabel} screening from ${formatDate(prev.date)}.`
+    : `Take this screening again later to compare against this map.`;
+  section.appendChild(note);
+
+  const legend = document.createElement("div");
+  legend.className = "legend-row";
+  legend.innerHTML = `
+    <div class="legend-item"><span class="legend-dot" style="background:#5B7065"></span>Low</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#A8763E"></span>Moderate</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#B4654A"></span>High</div>`;
+  section.appendChild(legend);
+
+  const rule = document.createElement("div");
+  rule.className = "contour-rule";
+  section.appendChild(rule);
 
   scores
     .slice()
@@ -1023,19 +1218,70 @@ function renderResults() {
       body.appendChild(copy);
 
       row.appendChild(body);
-      container.appendChild(row);
+      section.appendChild(row);
     });
 
-  document.getElementById("results-retake-row").style.display = viewingAssessmentId && viewingAssessmentId !== store.assessments[store.assessments.length - 1]?.id ? "none" : "flex";
+  return section;
+}
+
+function renderResults() {
+  const entry = viewingAssessmentId
+    ? store.assessments.find((a) => a.id === viewingAssessmentId)
+    : store.assessments[store.assessments.length - 1];
+  if (!entry) { goScreen("home"); return; }
+
+  let entries = [entry];
+  if (entry.pairId) {
+    entries = store.assessments
+      .filter((a) => a.pairId === entry.pairId)
+      .sort((a, b) => ((a.type || "masking") === "masking" ? 0 : 1) - ((b.type || "masking") === "masking" ? 0 : 1));
+  }
+
+  document.getElementById("results-date").textContent = entry.pairId
+    ? `${formatDate(entry.date)} \u00b7 both screenings`
+    : formatDate(entry.date);
+
+  const body = document.getElementById("results-body");
+  body.innerHTML = "";
+  entries.forEach((e, i) => {
+    const typeCfg = ASSESSMENT_TYPES[e.type || "masking"];
+    const section = renderResultsSection(e, typeCfg, entries.length > 1);
+    body.appendChild(section);
+    if (i < entries.length - 1) {
+      const rule = document.createElement("div");
+      rule.className = "contour-rule";
+      body.appendChild(rule);
+    }
+  });
+
+  const lastId = store.assessments[store.assessments.length - 1]?.id;
+  const isLatest = entries.some((e) => e.id === lastId);
+  document.getElementById("results-retake-row").style.display = viewingAssessmentId && !isLatest ? "none" : "flex";
 }
 
 /* ---------------------------------------------------------
    RENDER: TRENDS
 --------------------------------------------------------- */
+function setTrendType(type) {
+  trendType = type;
+  trendHidden = new Set();
+  renderTrends();
+}
+
 function renderTrends() {
+  const tabWrap = document.getElementById("trend-type-tabs");
+  if (tabWrap) {
+    tabWrap.innerHTML = Object.values(ASSESSMENT_TYPES)
+      .map((t) => `<button class="toolkit-tab-btn${trendType === t.id ? " active" : ""}" data-type="${t.id}">${escapeXml(t.shortLabel)}</button>`)
+      .join("");
+    tabWrap.querySelectorAll("button").forEach((b) => {
+      b.addEventListener("click", () => setTrendType(b.dataset.type));
+    });
+  }
+
   renderTrendChart(document.getElementById("trend-chart"));
   const legend = document.getElementById("trend-legend");
-  legend.innerHTML = DOMAINS.map(
+  legend.innerHTML = ASSESSMENT_TYPES[trendType].domains.map(
     (d) => `<button class="legend-chip${trendHidden.has(d.id) ? " off" : ""}" data-id="${d.id}"><span class="legend-dot" style="background:${d.color}"></span>${escapeXml(d.label)}</button>`
   ).join("");
   legend.querySelectorAll("button").forEach((b) => {
@@ -1048,16 +1294,26 @@ function renderTrends() {
 
   renderLogBarChart(document.getElementById("log-bar-chart"));
 
+  const countForType = store.assessments.filter((a) => (a.type || "masking") === trendType).length;
   document.getElementById("trend-assessment-count").textContent =
-    store.assessments.length === 0 ? "No full assessments yet." : `${store.assessments.length} full assessment${store.assessments.length === 1 ? "" : "s"} logged.`;
+    countForType === 0
+      ? `No ${ASSESSMENT_TYPES[trendType].shortLabel.toLowerCase()} screenings logged yet.`
+      : `${countForType} ${ASSESSMENT_TYPES[trendType].shortLabel.toLowerCase()} screening${countForType === 1 ? "" : "s"} logged.`;
 }
 
 /* ---------------------------------------------------------
    RENDER: HISTORY
 --------------------------------------------------------- */
 function renderHistory() {
+  const seenPairs = new Set();
+  const assessmentItems = store.assessments.filter((a) => {
+    if (!a.pairId) return true;
+    if (seenPairs.has(a.pairId)) return false;
+    seenPairs.add(a.pairId);
+    return true;
+  });
   const items = [
-    ...store.assessments.map((a) => ({ type: "assessment", date: a.date, ref: a })),
+    ...assessmentItems.map((a) => ({ type: "assessment", date: a.date, ref: a })),
     ...store.logs.map((l) => ({ type: "log", date: l.date, ref: l })),
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -1070,10 +1326,12 @@ function renderHistory() {
   wrap.innerHTML = items
     .map((it) => {
       if (it.type === "assessment") {
+        const typeCfg = ASSESSMENT_TYPES[it.ref.type || "masking"];
+        const label = it.ref.pairId ? "Both screenings" : typeCfg.label;
         return `<button class="history-row" data-type="assessment" data-id="${it.ref.id}">
           <div class="history-row-icon">\u25C8</div>
           <div class="log-row-body">
-            <div class="log-row-head"><span>Full terrain map</span><span class="mono">${escapeXml(formatDate(it.date))}</span></div>
+            <div class="log-row-head"><span>${escapeXml(label)}</span><span class="mono">${escapeXml(formatDate(it.date))}</span></div>
             <p class="log-row-tags">Tap to view this map</p>
           </div>
         </button>`;
@@ -1442,7 +1700,9 @@ function buildReportData(range) {
 
   const sortedAssessments = [...store.assessments].sort((a, b) => new Date(a.date) - new Date(b.date));
   const latest = sortedAssessments[sortedAssessments.length - 1] || null;
-  const first = sortedAssessments[0] || null;
+  const latestType = latest ? (latest.type || "masking") : "masking";
+  const sameTypeAssessments = sortedAssessments.filter((a) => (a.type || "masking") === latestType);
+  const first = sameTypeAssessments[0] || null;
 
   const avgOverall = logs.length ? logs.reduce((a, l) => a + l.overall, 0) / logs.length : null;
 
@@ -1472,7 +1732,7 @@ function buildReportData(range) {
     consistency: routineConsistency(r, 14),
   }));
 
-  return { logs, first, latest, avgOverall, overloadCounts, domainTagCounts, bodyCheckCounts, notes, planSummary, routineSummary };
+  return { logs, first, latest, latestType, avgOverall, overloadCounts, domainTagCounts, bodyCheckCounts, notes, planSummary, routineSummary };
 }
 
 function renderReport() {
@@ -1493,8 +1753,9 @@ function renderReport() {
   `;
 
   if (data.latest) {
-    const scoresArr = DOMAINS.map((d) => ({ label: d.label, score: data.latest.scores[d.id] ?? 0 })).sort((a, b) => b.score - a.score);
-    html += `<h2 class="section-heading">Masking profile \u2014 taken ${escapeXml(formatDate(data.latest.date))}</h2>`;
+    const typeCfg = ASSESSMENT_TYPES[data.latestType];
+    const scoresArr = typeCfg.domains.map((d) => ({ label: d.label, score: data.latest.scores[d.id] ?? 0 })).sort((a, b) => b.score - a.score);
+    html += `<h2 class="section-heading">${escapeXml(typeCfg.label)} profile \u2014 taken ${escapeXml(formatDate(data.latest.date))}</h2>`;
     html += `<div class="home-card">${scoresArr.map((s) => `
       <div class="report-row"><span>${escapeXml(s.label)}</span><span class="mono">${s.score} \u00b7 ${bandFor(s.score)}</span></div>
     `).join("")}</div>`;
@@ -1503,8 +1764,9 @@ function renderReport() {
   }
 
   if (data.first && data.latest && data.first.id !== data.latest.id) {
-    html += `<h2 class="section-heading">Change since first assessment (${escapeXml(formatDate(data.first.date))})</h2>`;
-    html += `<div class="home-card">${DOMAINS.map((d) => {
+    const typeCfg = ASSESSMENT_TYPES[data.latestType];
+    html += `<h2 class="section-heading">Change since first ${escapeXml(typeCfg.shortLabel.toLowerCase())} screening (${escapeXml(formatDate(data.first.date))})</h2>`;
+    html += `<div class="home-card">${typeCfg.domains.map((d) => {
       const delta = (data.latest.scores[d.id] ?? 0) - (data.first.scores[d.id] ?? 0);
       return `<div class="report-row"><span>${escapeXml(d.label)}</span><span class="mono">${delta > 0 ? "+" + delta : delta}</span></div>`;
     }).join("")}</div>`;
@@ -1524,7 +1786,7 @@ function renderReport() {
     const topDomainTags = Object.entries(data.domainTagCounts).sort((a, b) => b[1] - a[1]);
     if (topDomainTags.length) {
       html += `<div class="home-card"><p class="footnote" style="margin-bottom:0.5rem;">Most frequently tagged areas</p>${topDomainTags.map(([id, count]) => {
-        const d = DOMAINS.find((x) => x.id === id);
+        const d = MASKING_DOMAINS.find((x) => x.id === id);
         return `<div class="report-row"><span>${escapeXml(d ? d.label : id)}</span><span class="mono">${count}\u00d7</span></div>`;
       }).join("")}</div>`;
     }
@@ -1576,16 +1838,18 @@ function buildReportText() {
   lines.push("");
 
   if (data.latest) {
-    lines.push(`MASKING PROFILE (taken ${formatDate(data.latest.date)})`);
-    DOMAINS.map((d) => ({ label: d.label, score: data.latest.scores[d.id] ?? 0 }))
+    const typeCfg = ASSESSMENT_TYPES[data.latestType];
+    lines.push(`${typeCfg.label.toUpperCase()} PROFILE (taken ${formatDate(data.latest.date)})`);
+    typeCfg.domains.map((d) => ({ label: d.label, score: data.latest.scores[d.id] ?? 0 }))
       .sort((a, b) => b.score - a.score)
       .forEach((s) => lines.push(`- ${s.label}: ${s.score} (${bandFor(s.score)})`));
     lines.push("");
   }
 
   if (data.first && data.latest && data.first.id !== data.latest.id) {
-    lines.push(`CHANGE SINCE FIRST ASSESSMENT (${formatDate(data.first.date)})`);
-    DOMAINS.forEach((d) => {
+    const typeCfg = ASSESSMENT_TYPES[data.latestType];
+    lines.push(`CHANGE SINCE FIRST ${typeCfg.shortLabel.toUpperCase()} SCREENING (${formatDate(data.first.date)})`);
+    typeCfg.domains.forEach((d) => {
       const delta = (data.latest.scores[d.id] ?? 0) - (data.first.scores[d.id] ?? 0);
       lines.push(`- ${d.label}: ${delta > 0 ? "+" + delta : delta}`);
     });
@@ -1605,7 +1869,7 @@ function buildReportText() {
     if (topDomainTags.length) {
       lines.push("Most frequently tagged areas:");
       topDomainTags.forEach(([id, count]) => {
-        const d = DOMAINS.find((x) => x.id === id);
+        const d = MASKING_DOMAINS.find((x) => x.id === id);
         lines.push(`- ${d ? d.label : id}: ${count}x`);
       });
       lines.push("");
@@ -1674,12 +1938,18 @@ function printReport() {
 /* ---------------------------------------------------------
    EVENTS
 --------------------------------------------------------- */
-document.getElementById("begin-btn").addEventListener("click", beginAssessment);
+document.getElementById("begin-btn").addEventListener("click", openQuizChoice);
 document.getElementById("back-btn").addEventListener("click", goBack);
 document.getElementById("next-btn").addEventListener("click", goNext);
-document.getElementById("restart-btn").addEventListener("click", beginAssessment);
-document.getElementById("home-start-btn").addEventListener("click", beginAssessment);
-document.getElementById("home-retake-btn").addEventListener("click", beginAssessment);
+document.getElementById("restart-btn").addEventListener("click", openQuizChoice);
+document.getElementById("home-start-btn").addEventListener("click", openQuizChoice);
+document.getElementById("home-retake-btn").addEventListener("click", openQuizChoice);
+document.querySelectorAll(".quiz-choice-btn").forEach((btn) => {
+  btn.addEventListener("click", () => chooseAssessmentType(btn.dataset.type));
+});
+document.getElementById("quiz-choice-back").addEventListener("click", () => {
+  goScreen(store.assessments.length || store.logs.length ? "home" : "intro");
+});
 document.getElementById("home-quicklog-btn").addEventListener("click", () => goScreen("quicklog"));
 document.getElementById("quicklog-cancel").addEventListener("click", () => goScreen("home"));
 document.getElementById("quicklog-save").addEventListener("click", saveQuickLog);
