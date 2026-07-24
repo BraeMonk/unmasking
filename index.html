@@ -205,6 +205,18 @@
     padding: 1.25rem;
     margin-bottom: 1.25rem;
   }
+  .quiz-choice-row { padding: 0; overflow: hidden; }
+  .quiz-choice-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    padding: 1.1rem 1.25rem;
+    color: var(--ink);
+  }
+  .quiz-choice-btn:hover { background: rgba(91,112,101,0.08); }
+  .quiz-choice-btn h3 { font-family: 'Fraunces', serif; font-size: 1.0625rem; font-weight: 500; margin: 0 0 0.35rem 0; }
+  .quiz-choice-btn p { margin: 0; font-size: 0.8125rem; color: var(--ink-soft); line-height: 1.5; }
   .home-latest { display: flex; gap: 1rem; align-items: center; }
   .home-latest svg { flex-shrink: 0; }
   .home-latest-info { flex: 1; min-width: 0; }
@@ -512,6 +524,7 @@
     <h2 class="domain-label" style="font-size:1.5rem;">This isn't a diagnostic tool</h2>
     <p class="lede">Unmasking Map is a self-reflection and tracking app. It does not diagnose autism, ADHD, or any other condition, and it isn't a substitute for an assessment by a qualified clinician.</p>
     <p class="lede">The 28-item map is a plain-language reflection tool inspired by published camouflaging/masking research (CAT-Q style: compensation, masking, assimilation), reworked into everyday statements &mdash; it is not a validated clinical instrument, and your scores are self-reported patterns, not a score of who you are.</p>
+    <p class="lede">The optional second screening's four categories are inspired by the structure of the published RAADS-R, with original wording and a different scoring scale &mdash; it is not the RAADS-R instrument and has no validated clinical cutoff.</p>
     <p class="lede">The scaffolding plans and routine tools in the Toolkit are for personal coping and integration support only. Where a plan is based on someone else's published method, it's credited below; use them alongside, not instead of, care from a professional or program you trust.</p>
     <h3 class="section-heading">Sources used in this app</h3>
     <div id="disclaimer-sources"></div>
@@ -530,10 +543,38 @@
   <div id="screen-intro" class="screen active">
     <p class="eyebrow">Field survey &middot; not a diagnosis</p>
     <h1 class="title">Map where you mask,<br />not what you are.</h1>
-    <p class="lede">This is a progress tracker for unmasking, built around a 28-item self-reflection across seven domains &mdash; social scripting, sensory suppression, stimming, eye contact, interests, emotional labor, and executive fatigue.</p>
-    <p class="lede">Take the full map every few weeks to see your terrain shift, and use quick daily logs in between &mdash; the way you'd track weight or habits, but for how much you're masking. Answer for how you actually operate, not how you wish you operated.</p>
+    <p class="lede">This is a progress tracker built around two optional screenings &mdash; a 28-item masking map across seven domains (social scripting, sensory suppression, stimming, eye contact, interests, emotional labor, executive fatigue), and a 16-item RAADS-R-style trait reflection across four categories. Take one, or both.</p>
+    <p class="lede">Take a full screening every few weeks to see your terrain shift, and use quick daily logs in between &mdash; the way you'd track weight or habits, but for how much you're masking. Answer for how you actually operate, not how you wish you operated.</p>
     <div class="contour-rule"></div>
-    <button class="btn-primary" id="begin-btn">Take the first map</button>
+    <button class="btn-primary" id="begin-btn">Get started</button>
+  </div>
+
+  <!-- QUIZ CHOICE -->
+  <div id="screen-quiz-choice" class="screen">
+    <p class="eyebrow">Before you begin</p>
+    <h1 class="title">Choose your screening</h1>
+    <p class="lede">Take one on its own, or both back to back &mdash; you can always take the other later.</p>
+
+    <div class="home-card quiz-choice-row">
+      <button class="quiz-choice-btn" data-type="masking">
+        <h3>Masking Domains</h3>
+        <p>The 28-item map across seven masking domains &mdash; what you hide, and how.</p>
+      </button>
+    </div>
+    <div class="home-card quiz-choice-row">
+      <button class="quiz-choice-btn" data-type="raads">
+        <h3>Autistic Traits (RAADS-R style)</h3>
+        <p>A 16-item reflection across four trait categories &mdash; not what you hide, but how your wiring works.</p>
+      </button>
+    </div>
+    <div class="home-card quiz-choice-row">
+      <button class="quiz-choice-btn" data-type="both">
+        <h3>Both</h3>
+        <p>Take Masking Domains first, then roll straight into the RAADS-R-style screening.</p>
+      </button>
+    </div>
+
+    <button class="btn-ghost" id="quiz-choice-back">&larr; Back</button>
   </div>
 
   <!-- HOME / DASHBOARD -->
@@ -577,13 +618,13 @@
         </div>
       </div>
       <p class="footnote" id="home-recheck-hint" style="margin:0.75rem 0 0 0;"></p>
-      <button class="btn-secondary" id="home-retake-btn" style="margin-top:0.75rem;">Retake full map</button>
+      <button class="btn-secondary" id="home-retake-btn" style="margin-top:0.75rem;">Take a screening</button>
     </div>
 
     <div id="home-empty-wrap" class="home-card">
-      <h3 class="section-heading" style="margin-bottom:0.5rem;">No terrain map yet</h3>
-      <p class="footnote" style="margin-bottom:1rem;">The full 28-item map gives you a starting shape. Quick logs alone can't show a radar view.</p>
-      <button class="btn-primary" id="home-start-btn">Take the full map</button>
+      <h3 class="section-heading" style="margin-bottom:0.5rem;">No screening taken yet</h3>
+      <p class="footnote" style="margin-bottom:1rem;">Take the Masking Domains map, the RAADS-R-style trait screening, or both to get a starting shape. Quick logs alone can't show a radar view.</p>
+      <button class="btn-primary" id="home-start-btn">Choose a screening</button>
     </div>
 
     <h2 class="section-heading">Recent logs</h2>
@@ -638,29 +679,16 @@
   <!-- RESULTS -->
   <div id="screen-results" class="screen">
     <p class="eyebrow" id="results-date">Your terrain map</p>
-    <h2 class="domain-label">Where your masking sits</h2>
+    <h2 class="domain-label">Where your results sit</h2>
 
-    <div class="chart-card">
-      <svg id="radar-chart" width="100%" viewBox="0 0 400 340" preserveAspectRatio="xMidYMid meet"></svg>
-    </div>
-    <p class="footnote" id="results-compare-note" style="margin-bottom:1rem;"></p>
-
-    <div class="legend-row">
-      <div class="legend-item"><span class="legend-dot" style="background:#5B7065"></span>Low</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#A8763E"></span>Moderate</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#B4654A"></span>High</div>
-    </div>
+    <div id="results-body"></div>
 
     <div class="contour-rule"></div>
 
-    <div id="scores-container"></div>
-
-    <div class="contour-rule"></div>
-
-    <p class="footnote">This map reflects self-reported patterns, not a clinical assessment. Your two or three highest-scoring domains are typically the strongest starting points for an unmasking plan.</p>
+    <p class="footnote">These maps reflect self-reported patterns, not a clinical assessment. Your two or three highest-scoring domains are typically the strongest starting points.</p>
 
     <div class="action-row" id="results-retake-row">
-      <button class="btn-primary" id="restart-btn">Retake full map</button>
+      <button class="btn-primary" id="restart-btn">Take a new screening</button>
     </div>
   </div>
 
@@ -668,6 +696,8 @@
   <div id="screen-trends" class="screen">
     <p class="eyebrow">Over time</p>
     <h1 class="title">Trends</h1>
+
+    <div class="toolkit-tabs" id="trend-type-tabs"></div>
 
     <h2 class="section-heading">Domain scores across full maps</h2>
     <div class="chart-card">
